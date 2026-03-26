@@ -27,6 +27,7 @@ module renPED
   character(LEN=LEN_STR):: SV(MAX_VAR), string
   character(LEN=MAX_STR):: ofile, ofmt
   logical:: missBYR, inb_cal=.false., rel_cal=.false.
+  logical :: ref_ok
   integer:: IV(MAX_VAR), strlen, ianim
   integer(kind=ki4) :: NREC, NRECTot, unt, NA, n, i, j, ii, ix, jx, ios, stats(3), status
   integer(kind=ki4) :: k
@@ -50,9 +51,13 @@ module renPED
       type(CPED) :: tmpX
       integer :: idx_lookup
 
+  ref_ok = .false.
   if(present(REFFile)) then
-   if(.not.present(REFinfo)) stop "please enter REFFile column"
-   if(REFinfo(1) == missI) stop "REFFile column denoted by 0"
+   if(.not.present(REFinfo) .or. (present(REFinfo) .and. REFinfo(1) == missI)) then
+     write(*,*) 'Warning: REFFile specified but REFINFO missing or invalid; ignoring REFFile'
+   else
+     ref_ok = .true.
+   endif
   endif
   if(present(inb)) then
   if(inb == 1) inb_cal=.true.
@@ -89,7 +94,7 @@ module renPED
   NREC=NA
   print*,"end read PEDFile data", NREC
   print*,"Ped File: Hash  size = ", h%hash_mask,"    Hash filled(No. of animal on PED) = ", h%n_keys_stored
-  if(present(REFFile)) then
+  if(ref_ok) then
    if(rel_cal) then
     NREC= N_recf(REFFile)
     allocate(REFAnim(NREC))
@@ -131,7 +136,7 @@ module renPED
       
  call trace_PED()
 
- if(present(REFFile)) then
+  if(ref_ok) then
    do i = 0, h%n_buckets-1
       if (h%valid_index(i)) then
         if(h%vals(i)%GEN < 0) then
@@ -297,7 +302,7 @@ module renPED
 
 endif
 
- if(present(REFFile)) then
+ if(ref_ok) then
    ofile=trim(REFFile)//"_ren"
  else
    ofile=trim(PEDFile)//"_ren"

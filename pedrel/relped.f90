@@ -25,7 +25,11 @@ program relped
  call read_parameter(PARAM_File)
 
  if(reference) then
-     call renumped(PEDFile=PEDFile, PEDinfo=PEDinfo, REFFile=REFFile, REFinfo=REFinfo, inb=inb, rel=rel, use_gpu=use_gpu, device_id=device_id)
+     if(REFinfo(1) /= 0) then
+         call renumped(PEDFile=PEDFile, PEDinfo=PEDinfo, REFFile=REFFile, REFinfo=REFinfo, inb=inb, rel=rel, use_gpu=use_gpu, device_id=device_id)
+     else
+         call renumped(PEDFile=PEDFile, PEDinfo=PEDinfo, REFFile=REFFile, inb=inb, rel=rel, use_gpu=use_gpu, device_id=device_id)
+     endif
  else
      call renumped(PEDFile=PEDFile, PEDinfo=PEDinfo, inb=inb, rel=rel, use_gpu=use_gpu, device_id=device_id)
  endif
