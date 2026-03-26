@@ -7,13 +7,9 @@ module renPED
   use omp_lib
   implicit none
   type(ffh_t) :: h
-  logical :: store_debug = .false.
 
   contains
-  subroutine set_store_debug(flag)
-    logical, intent(in) :: flag
-    store_debug = flag
-  end subroutine set_store_debug
+
   subroutine renumped(PEDFile, PEDinfo, REFFile, REFinfo, inb, rel, use_gpu, device_id)
   character(LEN=*),intent(in):: PEDFile
   integer,intent(in):: PEDinfo(:)
@@ -403,52 +399,13 @@ module renPED
 
   ! store F (double precision) without scaling
   do i = 1, NREC
-   ! Prefer current hash lookup index to ensure we write to the live slot
-   idx_lookup = h%get_index(trim(REF(i)%ID))
-   if (idx_lookup /= -1) then
-     h%vals(idx_lookup)%F = F(i)
-   else
-     h%vals(order(i))%F = F(i)
-   end if
-   ! Quick runtime verification: print stored vs computed for small sample,
-   ! any non-zero F, or any of the user-provided target IDs
-   if (i <= 20 .or. abs(F(i)) > 0.0_r8) then
-     if (store_debug) then
-       write(*,*) 'STORE CHECK index=', i, 'ID=', trim(REF(i)%ID), 'F(i)=', F(i), 'stored=', h%vals(order(i))%F
-       ! Read back via hash lookup immediately after store to verify persistence
-       call h%get_value(trim(REF(i)%ID), tmpX, status)
-       if (status == -1) then
-         write(*,'(A,A)') 'STORE READBACK FAILED for ID=', trim(REF(i)%ID)
-       else
-         write(*,'(A,I6,2X,A,ES24.16)') 'STORE READBACK index=', i, 'readback F=', tmpX%F
-       end if
-       ! Also check direct lookup of hash index and read stored F directly from hash table
-       idx_lookup = h%get_index(trim(REF(i)%ID))
-       if (idx_lookup == -1) then
-         write(*,'(A,A)') 'STORE DIRECT LOOKUP FAILED for ID=', trim(REF(i)%ID)
-       else
-         write(*,'(A,I6,2X,A,ES24.16)') 'STORE DIRECT index=', idx_lookup, 'direct read F=', h%vals(idx_lookup)%F
-       end if
-       write(*,'(A,I6,2X,A,I6,2X,A,I6)') 'MAPPING: i=', i, ' order=', order(i), ' idx_lookup=', idx_lookup
-     end if
-   else
-     is_target = .false.
-     do t = 1, N_TARGETS
-       if (trim(REF(i)%ID) == trim(targets(t))) then
-         is_target = .true.
-         exit
-       end if
-     end do
-     if (is_target) then
-      if (store_debug) then
-        idx_lookup = h%get_index(trim(REF(i)%ID))
-        write(*,*) 'STORE CHECK index=', i, 'order=', order(i), 'ID=', trim(REF(i)%ID), 'F(i)=', F(i), 'stored=', h%vals(order(i))%F
-        if (idx_lookup /= -1) then
-          write(*,'(A,I6,2X,A,ES24.16)') 'STORE DIRECT idx_lookup=', idx_lookup, 'direct read F=', h%vals(idx_lookup)%F
-        end if
-      end if
-     end if
-   end if
+    ! Prefer current hash lookup index to ensure we write to the live slot
+    idx_lookup = h%get_index(trim(REF(i)%ID))
+    if (idx_lookup /= -1) then
+      h%vals(idx_lookup)%F = F(i)
+    else
+      h%vals(order(i))%F = F(i)
+    end if
   end do
   
   deallocate(F, sire_arr, dam_arr)
