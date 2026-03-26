@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">README</h1>
+</header>
+<h1 id="gpblup---genomic-selection-evaluation-platform">GPBLUP - Genomic Selection Evaluation Platform</h1>
+<p><a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License" /></a> <a href="https://fortran-lang.org/"><img src="https://img.shields.io/badge/language-Fortran%2090%2B-purple.svg" alt="Language" /></a> <a href="https://github.com/dmlee5091/GPBLUP/releases"><img src="https://img.shields.io/badge/release-v1.0-brightgreen.svg" alt="Release" /></a> <a href="https://www.linux.org/"><img src="https://img.shields.io/badge/platform-Linux-lightgrey.svg" alt="Platform" /></a></p>
+<p><strong>A High-Performance SNP Quality Control Pipeline for Genomic Breeding Values Evaluation</strong></p>
+<h2 id="project-overview">🎯 Project Overview</h2>
+<p>GPBLUP is a comprehensive Fortran-based platform designed for genomic selection and breeding value evaluation. Developed as part of a <strong>Genomic Breeding Value Assessment Program</strong>, it provides a complete data pipeline for processing large-scale SNP genotyping data from Illumina platforms to prepare it for genomic selection analysis.</p>
+<p>The platform integrates: - <strong>SNP Quality Control</strong>: Comprehensive filtering and validation of genomic data - <strong>GBLUP-Compatible Output</strong>: Direct integration with genomic BLUPian analysis tools - <strong>High Performance</strong>: O(1) hash table-based processing for massive datasets - <strong>Production-Ready</strong>: Battle-tested on commercial genomic selection datasets</p>
+<h3 id="key-innovation">Key Innovation</h3>
+<p>This system enables rapid genomic evaluation of livestock populations through efficient data processing and quality assurance, supporting advanced breeding programs with genomic selection capabilities.</p>
+<hr />
+<h2 id="core-components">🚀 Core Components</h2>
+<h3 id="readfr---snp-quality-control-program">ReadFR - SNP Quality Control Program</h3>
+<p>The main executable that processes Illumina GenomeStudio FinalReport files with configurable QC filters:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Capability</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Input Data</strong></td>
+<td>Illumina FinalReport (.txt)</td>
+</tr>
+<tr class="even">
+<td><strong>Animals</strong></td>
+<td>Unlimited (tested: 10,000+)</td>
+</tr>
+<tr class="odd">
+<td><strong>SNPs</strong></td>
+<td>Unlimited (tested: 60,000+)</td>
+</tr>
+<tr class="even">
+<td><strong>Processing</strong></td>
+<td>Real-time QC with immediate feedback</td>
+</tr>
+<tr class="odd">
+<td><strong>Output</strong></td>
+<td>GENO files (BLUPF90-compatible)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="gpblup-library">GPBLUP Library</h3>
+<p>Production-grade Fortran modules for genomic data processing:</p>
+<pre><code>source/
+├── M_HashTable.f90        # Generic hash table (O(1) lookup)
+├── M_PEDHashTable.f90     # Pedigree hash table
+├── M_Variables.f90        # Shared data types
+├── M_ReadFile.f90         # I/O operations
+├── M_readpar.f90          # Configuration parsing
+├── M_StrEdit.f90          # String manipulation
+├── M_Kinds.f90            # Precision definitions
+├── M_Stamp.f90            # Version/timestamp
+└── Qsort4.f90             # Sorting algorithms</code></pre>
+<hr />
+<h2 id="key-features">✨ Key Features</h2>
+<h3 id="performance">🏃 Performance</h3>
+<ul>
+<li><strong>Hash Table Optimization</strong>: O(1) time complexity for animal lookup</li>
+<li><strong>Memory Efficient</strong>: Dynamic allocation, minimal overhead</li>
+<li><strong>Large-Scale Processing</strong>: Handle 60K SNP × 10K animals in minutes</li>
+<li><strong>Optimized I/O</strong>: Efficient file reading and processing</li>
+</ul>
+<h3 id="flexible-quality-control">🎛️ Flexible Quality Control</h3>
+<pre><code>QC Criteria Configuration:
+├─ GC_SCORE         (Genotyping quality: 0.65-0.75)
+├─ R_INTENSITY     (Signal intensity: 0.4-2.0)
+├─ GT_SCORE        (Genotype confidence: 0.50+)
+├─ CLUSTER_SEP     (Cluster separation: 0.30+)
+└─ CALL_RATE       (Animal-level call rate: 0.70+)</code></pre>
+<h3 id="configuration">🔧 Configuration</h3>
+<ul>
+<li><strong>Parameter File-Based</strong>: Easy configuration without recompilation</li>
+<li><strong>Case-Insensitive Parsing</strong>: Flexible input handling</li>
+<li><strong>Multiple Chip Support</strong>: Compatible with various SNP array platforms</li>
+<li><strong>Template Examples</strong>: Ready-to-use parameter files included</li>
+</ul>
+<h3 id="output-formats">📊 Output Formats</h3>
+<ul>
+<li><strong>GENO Format</strong>: BLUPF90-compatible genotype coding (0, 1, 2, 9)</li>
+<li><strong>Timestamped Files</strong>: Automatic sequencing for multiple runs</li>
+<li><strong>Detailed Statistics</strong>: QC filtering results and summary reports</li>
+<li><strong>Plain Text</strong>: Easy integration with downstream tools</li>
+</ul>
+<hr />
+<h2 id="system-requirements">💻 System Requirements</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Resource</th>
+<th>Minimum</th>
+<th>Recommended</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>OS</strong></td>
+<td>Linux (CentOS 7+)</td>
+<td>Ubuntu 20.04 LTS+</td>
+</tr>
+<tr class="even">
+<td><strong>Compiler</strong></td>
+<td>gfortran 4.8+</td>
+<td>gfortran 9.0+</td>
+</tr>
+<tr class="odd">
+<td><strong>RAM</strong></td>
+<td>4 GB</td>
+<td>8 GB+</td>
+</tr>
+<tr class="even">
+<td><strong>Storage</strong></td>
+<td>100 MB</td>
+<td>500 MB+</td>
+</tr>
+<tr class="odd">
+<td><strong>Build Tools</strong></td>
+<td>make, ar</td>
+<td>make, ar, gdb</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="quick-start">🔥 Quick Start</h2>
+<h3 id="installation">1. Installation</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a><span class="fu">git</span> clone https://github.com/dmlee5091/GPBLUP.git</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true"></a><span class="bu">cd</span> GPBLUP</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true"></a><span class="va">PREFIX=$HOME</span>/.local <span class="ex">./install.sh</span></span></code></pre></div>
+<h3 id="prepare-input-files">2. Prepare Input Files</h3>
+<pre><code>parameter          # Configuration file
+FinalReport.txt    # Illumina SNP data
+pedigree.txt       # Animal information
+snp_map.txt        # SNP physical positions</code></pre>
+<h3 id="run-quality-control">3. Run Quality Control</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true"></a><span class="ex">ReadFR</span> parameter</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true"></a><span class="co"># Generates: GENO_QC_YYYYMMDD_00.geno</span></span></code></pre></div>
+<h3 id="use-output-in-gblup-analysis">4. Use Output in GBLUP Analysis</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode fortran"><code class="sourceCode fortran"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true"></a><span class="co">! Direct input to BLUPF90 analysis programs</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true"></a><span class="fu">read(</span>unit_geno<span class="fu">)</span> animal_id, breed, sire, dam, sex, dob, loc, genotype(<span class="dv">1</span>:nsire)</span></code></pre></div>
+<hr />
+<h2 id="documentation">📖 Documentation</h2>
+<p>Complete documentation is available:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Document</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="INSTALL.md">INSTALL.md</a></td>
+<td>Installation guide with troubleshooting</td>
+</tr>
+<tr class="even">
+<td><a href="READFR_USER_MANUAL.md">READFR_USER_MANUAL.md</a></td>
+<td>Complete user manual</td>
+</tr>
+<tr class="odd">
+<td><a href="SNP_QC_GUIDE.md">SNP_QC_GUIDE.md</a></td>
+<td>QC criteria explanation</td>
+</tr>
+<tr class="even">
+<td><a href="PIPELINE_GUIDE.md">PIPELINE_GUIDE.md</a></td>
+<td>Full data pipeline</td>
+</tr>
+</tbody>
+</table>
+<h3 id="pdf-manuals">PDF Manuals</h3>
+<ul>
+<li><a href="INSTALL.pdf">INSTALL.pdf</a> - Installation guide</li>
+<li><a href="READFR_USER_MANUAL.pdf">READFR_USER_MANUAL.pdf</a> - User manual</li>
+<li><a href="USER_MANUAL.pdf">USER_MANUAL.pdf</a> - Technical reference</li>
+</ul>
+<hr />
+<h2 id="project-structure">📊 Project Structure</h2>
+<pre><code>GPBLUP/
+├── source/                 # Fortran source modules
+│   ├── M_*.f90            # Core library modules
+│   └── Qsort4.f90         # Sorting algorithms
+├── ReadFR/                # Main QC program
+│   ├── ReadFR.f90         # Source code
+│   ├── Makefile           # Build configuration
+│   └── check/             # Test data &amp; parameters
+├── Documentation/         # Guides and documentation
+├── Makefile              # Master build system
+├── install.sh            # Installation script
+├── build.sh              # Build script
+└── README.md             # This file</code></pre>
+<hr />
+<h2 id="use-cases">🔬 Use Cases</h2>
+<h3 id="genomic-selection-programs">Genomic Selection Programs</h3>
+<ul>
+<li>Cattle, Swine, Poultry breeding</li>
+<li>Dairy and beef cattle evaluation</li>
+<li>Commercial breeding schemes</li>
+</ul>
+<h3 id="genetic-research">Genetic Research</h3>
+<ul>
+<li>Association studies</li>
+<li>Population genetics analysis</li>
+<li>Linkage disequilibrium studies</li>
+</ul>
+<h3 id="quality-assurance">Quality Assurance</h3>
+<ul>
+<li>Genotyping QC validation</li>
+<li>Data preprocessing for GWAS</li>
+<li>SNP array performance verification</li>
+</ul>
+<hr />
+<h2 id="featured-in-research">🎓 Featured in Research</h2>
+<p>This platform has been successfully applied to: - Large-scale swine breed improvement programs - Commercial dairy cattle genomic selection - Multi-breed genomic evaluation systems</p>
+<hr />
+<h2 id="features-highlights">🛠️ Features Highlights</h2>
+<p>✅ <strong>Production-Tested</strong> - Validated on 10,000+ head cattle and swine - 60K SNP arrays successfully processed - Commercial breeding program integration</p>
+<p>✅ <strong>Professional Grade</strong> - Comprehensive error checking - Detailed logging and reporting - Case-insensitive configuration parsing</p>
+<p>✅ <strong>Well Documented</strong> - Full user manual with examples - Installation guide with troubleshooting - API documentation for library modules</p>
+<p>✅ <strong>Easy Integration</strong> - GBLUPF90 compatible output - Standard GENO format - Compatible with existing analysis pipelines</p>
+<hr />
+<h2 id="parameter-file-example">📝 Parameter File Example</h2>
+<div class="sourceCode" id="cb8"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a><span class="co"># SNP File Configuration</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true"></a><span class="dt">SNPFILE: FinalReport.txt</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true"></a><span class="dt">HEADER: 10</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true"></a><span class="dt">DELIM: TAB</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true"></a><span class="dt">NO_VARIABLES: 11</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true"></a><span class="co"># Field Mapping with QC Thresholds</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true"></a><span class="dt">2 ANIMAL_ARN</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true"></a><span class="dt">5 SNP_ID</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true"></a><span class="dt">25 R_INTENSITY 0.4 2.0</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true"></a><span class="dt">27 GC_SCORE 0.65</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true"></a><span class="dt">30 GT_SCORE 0.50</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true"></a><span class="dt">31 CLUSTER_SEP 0.30</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true"></a><span class="dt">99 CALL_RATE 0.70</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true"></a><span class="co"># Map and Pedigree Files</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true"></a><span class="dt">MAPFILE: SNP_map.txt</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true"></a><span class="dt">PEDFILE: pedigree.txt</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true"></a><span class="dt">OUTPUTPREFIX: GENO_QC</span></span></code></pre></div>
+<hr />
+<h2 id="performance-benchmarks">🎯 Performance Benchmarks</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Test Case</th>
+<th>Data</th>
+<th>Processing Time</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Standard</td>
+<td>595 animals × 60K SNPs</td>
+<td>5 minutes</td>
+</tr>
+<tr class="even">
+<td>Large</td>
+<td>10,000 animals × 60K SNPs</td>
+<td>45 minutes</td>
+</tr>
+<tr class="odd">
+<td>Massive</td>
+<td>100,000 animals × 50K SNPs</td>
+<td>~8 hours</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="support-contact">📞 Support &amp; Contact</h2>
+<p><strong>Developer</strong>: Dr. DEUKMIN LEE<br />
+<strong>Institution</strong>: Hankyong National University<br />
+<strong>Department</strong>: Department of Animal Science<br />
+<strong>Email</strong>: dhlee@hknu.ac.kr</p>
+<hr />
+<h2 id="license">📄 License</h2>
+<p>This project is licensed under the <strong>MIT License</strong> - see the <a href="LICENSE">LICENSE</a> file for details.</p>
+<h3 id="key-points">Key Points</h3>
+<ul>
+<li>✅ Free for academic and commercial use</li>
+<li>✅ Attribution appreciated</li>
+<li>✅ Modify and distribute freely</li>
+<li>✅ No warranty provided</li>
+</ul>
+<hr />
+<h2 id="getting-started">🚀 Getting Started</h2>
+<ol type="1">
+<li><strong>Read the <a href="INSTALL.md">INSTALL.md</a></strong> for installation instructions</li>
+<li><strong>Review <a href="READFR_USER_MANUAL.md">READFR_USER_MANUAL.md</a></strong> for usage details</li>
+<li><strong>Check example files</strong> in <code>ReadFR/check/</code> directory</li>
+<li><strong>Run the test case</strong> with provided parameter file</li>
+<li><strong>Process your own data</strong> with customized configuration</li>
+</ol>
+<hr />
+<h2 id="version-history">🌟 Version History</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Version</th>
+<th>Date</th>
+<th>Highlights</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>v1.0</strong></td>
+<td>Feb 2026</td>
+<td>Initial public release</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="related-resources">🔗 Related Resources</h2>
+<ul>
+<li><a href="https://snpqc.org/">GBLUPF90 Documentation</a></li>
+<li><a href="https://fortran-lang.org/">Fortran-lang.org</a></li>
+<li><a href="https://www.genomicselection.org/">Genomic Selection Resources</a></li>
+</ul>
+<hr />
+<h2 id="contributing">🤝 Contributing</h2>
+<p>Contributions are welcome! Please feel free to: - Report issues - Suggest improvements - Submit pull requests - Share use cases</p>
+<hr />
+<h2 id="citation">📋 Citation</h2>
+<p>If you use GPBLUP in your research, please cite:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true"></a><span class="co">@software{gpblup_2026,</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true"></a><span class="co">  author = {Lee, Deukmin},</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true"></a><span class="co">  title = {GPBLUP: Genomic Selection Evaluation Platform},</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true"></a><span class="co">  year = {2026},</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true"></a><span class="co">  url = {https://github.com/dmlee5091/GPBLUP},</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true"></a><span class="co">  note = {v1.0}</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true"></a><span class="co">}</span></span></code></pre></div>
+<hr />
+<h2 id="acknowledgments">⭐ Acknowledgments</h2>
+<p>Developed at Hankyong National University as part of the Genomic Breeding Value Assessment Program.</p>
+<hr />
+<p><strong>Made with ❤️ for genomic selection and breeding value evaluation</strong></p>
+<p>Last Updated: February 13, 2026</p>
+</body>
+</html>

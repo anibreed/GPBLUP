@@ -19,10 +19,12 @@ CHARACTER(len=1), PARAMETER, PUBLIC:: nullC = missC      ! " "
 CHARACTER(len=1), PARAMETER, PUBLIC:: SPACE = missC      ! " "
 CHARACTER(len=1), PARAMETER, PUBLIC:: missA = achar(48)  ! "0"
 CHARACTER(len=1), PARAMETER, PUBLIC:: TAB = achar(9)
-
+LOGICAL, PARAMETER, PUBLIC :: TRUE = .true., FALSE = .false.
+LOGICAL, PARAMETER, PUBLIC ::  Desc=.true., Ordered=.true.
+  
 type, PUBLIC :: FileInfo
-    character(len=MAX_STR) :: FileName
-    character(len=MAX_STR) :: FieldName(MAX_VAR)
+    character(len=MAX_RECL) :: FileName
+    character(len=LEN_STR) :: FieldName(MAX_VAR)
     integer :: FieldLoc(MAX_VAR)
     character(len=LEN_STR) :: Delim_char
     integer :: Header
@@ -51,44 +53,67 @@ end type PEDInfo
 ! =========================================================================
 ! QC 데이터 구조체 (SNP 품질 관리용)
 ! =========================================================================
-type, PUBLIC :: QC_Metrics
-   real :: gc_score              ! GC Score value
-   real :: r_value               ! R - Intensity value
-   real :: gt_score              ! GT Score value
-   real :: cluster_sep           ! Cluster Separation value
-   logical :: pass_qc            ! QC pass/fail result
-end type QC_Metrics
 
-type, PUBLIC :: QC_Counters
-   integer :: fail_gc            ! GC Score failures
-   integer :: fail_r             ! R-Intensity failures
-   integer :: fail_gt            ! GT Score failures
-   integer :: fail_cluster       ! Cluster Separation failures
-   integer :: fail_allele        ! Missing allele failures
-   integer :: fail_chr           ! Chromosome filter failures
-end type QC_Counters
+type, PUBLIC :: FRQC_matrices
+   character(len=LEN_STR) :: SNP_ID ! SNP identifier 
+   integer :: NVAR
+   real :: gc_score                 ! GC Score value
+   real :: r_intensity(2)           ! R - Intensity value
+   real :: gt_score                 ! GT Score value
+   real :: cluster_sep              ! Cluster Separation value
+   real :: animal_cr                ! Animal call rate
+   logical :: qc_passed            ! QC pass/fail flag
+end type FRQC_matrices
+
+type, PUBLIC :: POPQC_matrices
+   integer :: NVAR
+   real :: snp_cr                       ! SNP call rate
+   real :: animal_cr                    ! Animal call rate
+   real :: maf                          ! Minor Allele Frequency
+   character(len=LEN_STR) :: HWE_method ! HWE method (e.g., "FDR", "Bonferroni")
+   real :: HWE_threshold                ! FDR: 0.05, Bonferroni: 0.05/NVAR
+    integer :: HWE_min_n                 ! Minimum non-missing N required for HWE test
+    integer :: HWE_min_mac               ! Minimum minor-allele count required for HWE test
+    logical :: sex_check                 ! legacy sex check flag (compat)
+    real :: sex_concordence_threshold    ! female F threshold for sex concordance
+    real :: mendel_snp_threshold         ! Mendelian inconsistency threshold (per SNP)
+    real :: mendel_viol_threshold        ! Mendelian inconsistency threshold (per animal)
+    logical :: parent_seek               ! legacy parent seek flag (compat)
+    real :: parent_seek_threshold        ! candidate parent selection threshold
+    integer :: parent_seek_nsnps         ! target SNP count for parent-seek panel
+    real :: parent_seek_g_tol            ! G relationship tolerance for parent-seek
+    real :: id_merge_sample_fraction     ! sampling fraction for ID_MERGE contexts
+    real :: id_merge_confirm_match_threshold ! full-autosome confirm threshold for ID_MERGE
+    real :: id_swap_compat_min           ! Minimum Mendel compatibility for ID swap detection
+    integer :: id_swap_max_depth          ! Maximum recursion depth for ID swap chain
+end type POPQC_matrices
 
 ! =========================================================================
 ! QC Threshold 설정 (Parameter 파일에서 읽어옴)
 ! =========================================================================
-type, PUBLIC :: QC_Thresholds
-   real :: min_gc_score          ! Minimum GC Score (default: 0.65)
-   real :: min_r_intensity       ! Minimum R-Intensity (default: 0.4)
-   real :: max_r_intensity       ! Maximum R-Intensity (default: 2.0)
-   real :: min_gt_score          ! Minimum GT Score (default: 0.50)
-   real :: min_cluster_sep       ! Minimum Cluster Separation (default: 0.30)
-   real :: min_call_rate         ! Minimum Call Rate (default: 0.70)
-end type QC_Thresholds
 
 ! Module variables declaration with PUBLIC attribute
-type(FileInfo), public :: PEDFile, DATAFile, SNPFile, MAPFile
-type(QC_Thresholds), public :: QCThresholds
-character(len=MAX_STR), public :: OutputPrefix = "output"  ! Default output prefix
+type(FileInfo), public :: PEDFile, DATAFile, MAPFile, FRFile, GENOFile, SNPFile
+type(FileInfo), target, save :: FROUTFile, GENOUTFile
+character(len=MAX_RECL), pointer, save :: PREFIX => null()
+integer, pointer, save :: Fieldwidth(:) => null()  ! Pointer alias for FieldLoc in output context
+type(FRQC_matrices), public :: FRQC
+type(POPQC_matrices), public :: POPQC
 
 ! Public subroutines
-public :: init_File, init_Ped, init_QC_Thresholds, get_QC_Threshold_values
+public :: init_File, init_Ped, init_FRQC, init_POPQC
 
 contains
+
+subroutine init_pointers(OUTFile)
+    type(FileInfo), intent(in), target :: OUTFile 
+    
+    nullify(PREFIX)
+    nullify(Fieldwidth)
+    
+    PREFIX => OUTFile%FileName
+    Fieldwidth => OUTFile%FieldLoc 
+end subroutine init_pointers
 
 subroutine init_File(File)
     type(FileInfo), intent(out) :: File
@@ -112,27 +137,42 @@ subroutine init_Ped(ped)
     ped%LOC = ''
 end subroutine init_Ped
 
-subroutine init_QC_Thresholds(thresholds)
-    type(QC_Thresholds), intent(out) :: thresholds
-    ! Default values (empirical thresholds)
-    thresholds%min_gc_score = 0.65
-    thresholds%min_r_intensity = 0.4
-    thresholds%max_r_intensity = 2.0
-    thresholds%min_gt_score = 0.50
-    thresholds%min_cluster_sep = 0.30
-    thresholds%min_call_rate = 0.70
-end subroutine init_QC_Thresholds
+subroutine init_FRQC(FR_QC)
+   type(FRQC_matrices), intent(out) :: FR_QC
+   FR_QC%SNP_ID = ''
+   FR_QC%NVAR = 0
+   FR_QC%gc_score = 0.15
+   FR_QC%r_intensity(1) = 0.20
+   FR_QC%r_intensity(2) = 2.00
+   FR_QC%gt_score = 0.15
+   FR_QC%cluster_sep = 0.30
+   FR_QC%animal_cr = 0.70
+   FR_QC%qc_passed = .false.
+end subroutine init_FRQC
 
-! Helper for ReadFR to access module QCThresholds values
-subroutine get_QC_Threshold_values(min_gc, min_r, max_r, min_gt, min_cluster, min_callrate)
-    real, intent(out) :: min_gc, min_r, max_r, min_gt, min_cluster, min_callrate
-    min_gc = QCThresholds%min_gc_score
-    min_r = QCThresholds%min_r_intensity
-    max_r = QCThresholds%max_r_intensity
-    min_gt = QCThresholds%min_gt_score
-    min_cluster = QCThresholds%min_cluster_sep
-    min_callrate = QCThresholds%min_call_rate
-end subroutine get_QC_Threshold_values
+subroutine init_POPQC(POP_QC)
+   type(POPQC_matrices), intent(out) :: POP_QC
+   POP_QC%NVAR = 0
+   POP_QC%maf = 0.01
+   POP_QC%snp_cr = 0.70
+   POP_QC%animal_cr = 0.70
+   POP_QC%HWE_method = 'BONFERRONI'
+   POP_QC%HWE_threshold = 0.05
+    POP_QC%HWE_min_n = 20
+    POP_QC%HWE_min_mac = 5
+    POP_QC%sex_check = .true.
+    POP_QC%sex_concordence_threshold = 0.02
+    POP_QC%mendel_snp_threshold = 0.01
+    POP_QC%mendel_viol_threshold = 0.01
+    POP_QC%parent_seek = .true.
+    POP_QC%parent_seek_threshold = 0.95
+    POP_QC%parent_seek_nsnps = 500
+    POP_QC%parent_seek_g_tol = 0.15
+    POP_QC%id_merge_sample_fraction = 0.20
+    POP_QC%id_merge_confirm_match_threshold = 0.995
+    POP_QC%id_swap_compat_min = 0.95
+    POP_QC%id_swap_max_depth = 3
+end subroutine init_POPQC
 
 end module M_Variables
 

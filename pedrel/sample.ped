@@ -1,0 +1,5 @@
+# sample pedigree: ARN SRN DRN BYR SEX
+A1 0 0 2020 1
+A2 A1 0 2021 2
+A3 A1 A2 2022 1
+A4 A2 A3 2023 1

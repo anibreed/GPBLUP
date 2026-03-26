@@ -1,0 +1,24 @@
+# Fortran Makefile for popQC pipeline
+# Usage: make -f Makefile.popQC all
+
+FC = gfortran
+SRC_DIR = source
+QC_DIR = popQC
+MODS = M_Kinds M_Stamp M_Variables M_StrEdit M_ReadFile M_PEDHashTable M_HashTable M_param M_readpar Qsort4 M_HWEParam
+MOD_SRCS = $(addprefix $(SRC_DIR)/,$(addsuffix .f90,$(MODS)))
+MOD_OBJS = $(addprefix $(SRC_DIR)/,$(addsuffix .o,$(MODS)))
+QC_SRC = $(QC_DIR)/popQC.f90
+QC_EXE = $(QC_DIR)/popQC
+
+all: $(QC_EXE)
+
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.f90
+	$(FC) -c $< -o $@
+
+$(QC_EXE): $(MOD_OBJS) $(QC_SRC)
+	$(FC) -g $(MOD_OBJS) $(QC_SRC) -o $(QC_EXE)
+
+clean:
+	rm -f $(SRC_DIR)/*.o $(SRC_DIR)/*.mod $(QC_EXE)
+
+.PHONY: all clean

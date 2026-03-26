@@ -161,44 +161,61 @@ contains
 integer function N_recf(filename) result(rec_N)
  character(LEN=*),intent(in)::filename
  character(LEN=512):: REC
- integer::io,unitF
+ integer::ios,unitF
 
  unitF=fopen(filename)
  rec_N=0
- do
-   read(unitF,*,iostat=io) REC
-   if( io /= 0 ) exit
-   REC=adjustl(REC)
-   if(REC(1:1)/='#'.or.len_trim(REC) < 0) rec_N=rec_N+1
- enddo
- close(unit=unitF)
+    ! Loop through input file to count records
+    do
+      read(unitF, '(A)', iostat=ios) REC
+      if (ios /= 0) exit
+      
+      ! Skip empty lines and comment lines (starting with #)
+      if (len_trim(REC) > 0 .and. REC(1:1) /= '#') then
+        rec_N = rec_N + 1
+      end if
+    end do
+    close(unit=unitF)
  end function N_recf
 
-integer function fopen(filename,recLen) 
-  character(LEN=*),intent(in) :: filename
-  integer,intent(in),optional :: recLen
-  logical:: F_exists,F_OPENED
-  integer:: rec_size
+integer function fopen(filename, recl)
+    character(len=*), intent(in) :: filename
+    integer, intent(in), optional :: recl
+    integer :: unit, ios
+    logical :: file_exists
+    
+    ! Check if file exists
+    inquire(file=trim(filename), exist=file_exists)
+    if (.not. file_exists) then
+      write(*,'(A)') "ERROR: Parameter file not found: "//trim(filename)
+      write(*,'(A)') "  -> Searching in current directory and common paths..."
+      fopen = -1
+      return
+    end if
+    
+    ! Find available unit number
+    unit = 10
+    do while (unit < 100)
+      inquire(unit=unit, opened=file_exists)
+      if (.not. file_exists) exit
+      unit = unit + 1
+    end do
+    
+    ! Open file
+    if (present(recl)) then
+        open(unit=unit, file=trim(filename), status='old', action='read', iostat=ios, recl=recl)
+    else
+        open(unit=unit, file=trim(filename), status='old', action='read', iostat=ios)
+    end if
 
-  inquire(file=filename,EXIST=F_exists,OPENED=F_OPENED, &
-         NUMBER=fopen, RECL=rec_size)
-  if(F_exists) then
-     if(F_OPENED) close(unit=fopen)
-     if(rec_size <= 0) then
-        if(present(recLen)) then
-           rec_size=recLen
-        else
-           rec_size=512
-        end if
-     end if
-     open(newunit=fopen,file=filename,recl=rec_size,status='old')
-     return
-  else
-    print *, "ERROR: File not found: ", trim(filename)
-    print *, "Working directory: "
-    call execute_command_line("pwd")
-    stop "File reading error"
-  end if
-end function
+    if (ios /= 0) then
+      write(*,'(A)') "ERROR: Failed to open file: "//trim(filename)
+      write(*,'(A,I0)') "  -> I/O Error code: ", ios
+      fopen = -1
+      return
+    end if
+    
+    fopen = unit
+end function fopen
 
 end module M_ReadFile

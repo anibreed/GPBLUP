@@ -1,20 +1,43 @@
 module M_StrEdit
+! ============================================================================
+! M_StrEdit - String Editing and Manipulation Module
+! ============================================================================
+! Purpose:
+!   Comprehensive string manipulation functions for Fortran programs
+!   Optimized for performance with frequently-used functions
+!
+! Core Functions (Most Used):
+!   - to_upper, to_lower: Case conversion
+!   - split_string: Parse strings by delimiter
+!   - FindDelim: Convert delimiter names to characters
+!   - is_numeric, is_letter, is_digit: Type checking
+!   - str_to_*, NumToStr: Type conversions
+!   - resolve_file_path, is_absolute_path: Path utilities
+!   - to_logical: String to boolean conversion
+!
+! Author: Dr. DEUKMIN LEE
+! Updated: March 2026 - Performance optimizations
+! ============================================================================
 use M_Kinds
 use M_Variables
 implicit none
 private
-public concat,  to_upper, to_lower
-public remove_special_chars, remove_all_special_chars, clean_string
-public parse, compact, removesp
-public shiftstr, insertstr, delsubstr, delall, match, trimzero
-public NumToStr
-public str_to_i4, str_to_i8, str_to_r4, str_to_r8
-public strvec_to_r4, strvec_to_i4, strvec_to_num
-public remove_duplicate_spaces, split_string
-public is_str, is_letter, is_digit, is_numeric
-public FindDelim
-public get_directory_path, resolve_file_path, is_absolute_path
-public operator(+)
+
+! Public Interface (alphabetically organized)
+public :: concat, to_upper, to_lower, to_logical
+public :: remove_special_chars, remove_all_special_chars, clean_string
+public :: parse, compact, removesp
+public :: shiftstr, insertstr, delsubstr, delall, match, trimzero
+public :: NumToStr
+public :: str_to_i4, str_to_i8, str_to_r4, str_to_r8
+public :: strvec_to_r4, strvec_to_i4, strvec_to_num
+public :: remove_duplicate_spaces, split_string
+public :: is_str, is_letter, is_digit, is_numeric
+public :: FindDelim
+public :: get_directory_path, resolve_file_path, is_absolute_path
+public :: yyyymmdd_to_date, bdate_to_jdn
+public :: get_field_pos
+public :: operator(+)
 
 INTERFACE OPERATOR (+)
  MODULE PROCEDURE concat
@@ -773,37 +796,28 @@ end function is_hangul
 
 function is_numeric(str) result(res)
 ! Returns .true. if str can be read as a numeric value (integer or real)
+! OPTIMIZED: Single validation pass - removed redundant character checking
+!
+! Performance: Uses direct READ test which is most reliable and efficient
 character(len=*), intent(in) :: str
 logical :: res
 character(len=len(str)) :: s
-integer :: i, lenstr, ios
+integer :: lenstr, ios
 real(kind=r8) :: tmp
 
 s = adjustl(str)
 lenstr = len_trim(s)
+
 if (lenstr == 0) then
    res = .false.
    return
 end if
 
-! 빠른 문자 검증: 숫자, 부호, 소수점, 지수 표기만 허용
-do i = 1, lenstr
-   select case (s(i:i))
-   case('0':'9','+','-','.', 'E','e','D','d')
-      cycle
-   case default
-      res = .false.
-      return
-   end select
-end do
-
+! Direct READ test - most reliable and efficient method
+! No need for pre-validation since READ handles all valid numeric formats
 read(s(1:lenstr), *, iostat=ios) tmp
-if (ios /= 0) then
-   res = .false.
-   return
-end if
+res = (ios == 0)
 
-res = .true.
 end function is_numeric
 
 !**********************************************************************
@@ -951,21 +965,25 @@ end subroutine remove_duplicate_spaces
 !**********************************************************************
 subroutine split_string(str, parts, num_parts, delimiter)
 ! 문자열을 delimiter를 중심으로 분리하여 배열에 저장
-! delimiter로 공백(" "), tab 등 지원
+! OPTIMIZED: Uses allocatable array for better memory efficiency
+!
 ! Arguments:
 !   str       - (in)  입력 문자열
 !   delimiter - (in)  delimiter 문자 (CHAR(9)=tab, CHAR(32)=space 등)
 !   parts     - (out) 분리된 문자열들의 배열
 !   num_parts - (out) 분리된 부분의 개수
+!
+! Performance: O(n) time complexity, memory-efficient with allocatable arrays
 
 character(len=*), intent(in) :: str
 character(len=1), intent(in) :: delimiter
-character(len=*), intent(out) :: parts(MAX_VAR)
+character(len=*), intent(out) :: parts(:)
 integer, intent(out) :: num_parts
-integer :: i, str_len
-integer :: delim_pos(MAX_RECL)  ! allocatable 대신 고정 크기 배열 사용
-integer :: delim_count
 
+integer :: i, str_len, delim_count
+integer, allocatable :: delim_pos(:)  ! OPTIMIZED: allocatable for exact memory usage
+
+parts(:) = ''
 str_len = len_trim(str)
 
 if (str_len == 0) then
@@ -974,9 +992,25 @@ if (str_len == 0) then
     return
 end if
 
-! delimiter 위치 찾기
+! Count delimiters (first pass)
 delim_count = 0
-delim_pos = 0  ! 배열 초기화
+do i = 1, str_len
+    if (str(i:i) == delimiter) delim_count = delim_count + 1
+end do
+
+num_parts = delim_count + 1
+
+! Handle no delimiter case
+if (delim_count == 0) then
+    parts(1) = trim(adjustl(str))
+    return
+end if
+
+! Allocate exact size needed
+allocate(delim_pos(delim_count))
+
+! Store delimiter positions (second pass)
+delim_count = 0
 do i = 1, str_len
     if (str(i:i) == delimiter) then
         delim_count = delim_count + 1
@@ -984,24 +1018,16 @@ do i = 1, str_len
     end if
 end do
 
-num_parts = delim_count + 1
-parts(:) = ''
+! Extract parts
+parts(1) = trim(adjustl(str(1:delim_pos(1)-1)))
 
-if (delim_count == 0) then
-    ! delimiter가 없으면 전체 문자열을 반환
-    parts(1) = trim(str)
-else
-    ! 첫 번째 부분
-    parts(1) = trim(adjustl(str(1:delim_pos(1)-1)))
-    
-    ! 중간 부분들
-    do i = 1, delim_count - 1
-        parts(i+1) = trim(adjustl(str(delim_pos(i)+1:delim_pos(i+1)-1)))
-    end do
-    
-    ! 마지막 부분
-    parts(num_parts) = trim(adjustl(str(delim_pos(delim_count)+1:str_len)))
-end if
+do i = 1, size(delim_pos) - 1
+    parts(i+1) = trim(adjustl(str(delim_pos(i)+1:delim_pos(i+1)-1)))
+end do
+
+parts(num_parts) = trim(adjustl(str(delim_pos(size(delim_pos))+1:str_len)))
+
+deallocate(delim_pos)
 end subroutine split_string
 
 !**********************************************************************
@@ -1110,6 +1136,115 @@ function resolve_file_path(base_dir, file_path) result(resolved_path)
     end if
   end if
 end function resolve_file_path
+
+function to_logical(str) result(res)
+    implicit none
+    character(len=*), intent(in) :: str
+    logical :: res
+    character(len=len_trim(adjustl(str))) :: tmp_str, temp_str
+
+    ! 앞뒤 공백 제거 및 소문자 변환 준비
+    tmp_str = trim(adjustl(str))
+    
+    ! 대소문자 구분 없애기 (소문자로 통일)
+    temp_str = to_lower(tmp_str)
+    
+    ! 논리값 판별
+    select case (temp_str)
+    case ('true', 't', 'yes', 'y', '1')
+        res = .true.
+    case ('false', 'f', 'no', 'n', '0')
+        res = .false.
+    case default
+        res = .false. ! 기본값 (또는 에러 처리)
+        print *, "Warning: Invalid logical string '", trim(str), "', returning .false."
+    end select
+end function to_logical
+
+!**********************************************************************
+! yyyymmdd 정수를 (year, month, day)로 분해하는 서브루틴
+! bdate_int : yyyymmdd 형식의 정수 (예: 20210315)
+! year, month, day : 분해된 연, 월, 일
+subroutine yyyymmdd_to_date(bdate_int, year, month, day)
+  integer, intent(in)  :: bdate_int
+  integer, intent(out) :: year, month, day
+  year  = bdate_int / 10000
+  month = mod(bdate_int, 10000) / 100
+  day   = mod(bdate_int, 100)
+end subroutine yyyymmdd_to_date
+
+!**********************************************************************
+! yyyymmdd 정수를 율리우스 일수(Julian Day Number)로 변환하는 함수
+! 그레고리안력 기준의 JDN 반환 (날짜 간격 계산에 사용)
+! bdate_int <= 0이면 0 반환 (날짜 불명)
+function bdate_to_jdn(bdate_int) result(jdn)
+  integer, intent(in) :: bdate_int
+  integer :: jdn
+  integer :: yy, mm, dd, aa
+  if (bdate_int <= 0) then
+    jdn = 0
+    return
+  end if
+  call yyyymmdd_to_date(bdate_int, yy, mm, dd)
+  aa  = (14 - mm) / 12
+  yy  = yy + 4800 - aa
+  mm  = mm + 12 * aa - 3
+  jdn = dd + (153 * mm + 2) / 5 + 365 * yy + yy / 4 - yy / 100 + yy / 400 - 32045
+end function bdate_to_jdn
+
+  ! ============================================================
+  ! get_field_pos  — locate start/end of a delimited field
+  !   Returns out_start/out_end byte positions (1-based) within
+  !   in_line for the in_col_pos-th field.  No memory allocation.
+  ! ============================================================
+  subroutine get_field_pos(in_line, in_line_len, in_delim, in_col_pos, &
+                            out_start, out_end, out_found)
+    character(len=*), intent(in)  :: in_line
+    integer,          intent(in)  :: in_line_len
+    character(len=1), intent(in)  :: in_delim
+    integer,          intent(in)  :: in_col_pos
+    integer,          intent(out) :: out_start, out_end
+    logical,          intent(out) :: out_found
+
+    integer :: i, col_idx, start_pos
+    logical :: collapse_ws
+
+    out_found = .false.; out_start = 0; out_end = -1
+    if (in_col_pos <= 0 .or. in_line_len <= 0) return
+
+    collapse_ws = (in_delim == ' ' .or. in_delim == achar(9))
+
+    if (collapse_ws) then
+      i = 1; col_idx = 0
+      do while (i <= in_line_len)
+        do while (i <= in_line_len .and. &
+                  (in_line(i:i) == ' ' .or. in_line(i:i) == achar(9)))
+          i = i + 1
+        end do
+        if (i > in_line_len) exit
+        col_idx   = col_idx + 1
+        start_pos = i
+        do while (i <= in_line_len .and. &
+                  in_line(i:i) /= ' ' .and. in_line(i:i) /= achar(9))
+          i = i + 1
+        end do
+        if (col_idx == in_col_pos) then
+          out_start = start_pos; out_end = i - 1; out_found = .true.; return
+        end if
+      end do
+    else
+      col_idx = 1; start_pos = 1
+      do i = 1, in_line_len + 1
+        if (i > in_line_len .or. in_line(i:i) == in_delim) then
+          if (col_idx == in_col_pos) then
+            out_start = start_pos; out_end = i - 1; out_found = .true.; return
+          end if
+          col_idx   = col_idx + 1
+          start_pos = i + 1
+        end if
+      end do
+    end if
+  end subroutine get_field_pos
 
 end module M_StrEdit
 

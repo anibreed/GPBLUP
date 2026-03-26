@@ -22,6 +22,7 @@ module renPED
   type(VPED),allocatable:: REF(:)
   integer,allocatable:: order(:),NPED(:,:)
   real(8),allocatable:: F(:)
+  real(kind=r8), allocatable :: F_tab(:)
   character(LEN=LEN_STR),allocatable:: REFAnim(:)
   character(LEN=LEN_STR):: SV(MAX_VAR), string
   character(LEN=MAX_STR):: ofile, ofmt
@@ -38,18 +39,9 @@ module renPED
   real(kind=r8), allocatable :: val_s(:), val_d(:)
   integer(kind=ki4) :: n_s, n_d, maxanc
   real(kind=r8) :: a_sd_re
-  integer(kind=ki4), allocatable :: dbg_idx(:)
-  integer(kind=ki4) :: dbg_count, tmp_i
   integer :: omp_nprocs, omp_threads
-    ! Target list for per-animal diagnostics (provided by user)
-    integer, parameter :: N_TARGETS = 10
-    character(len=LEN_STR), parameter :: targets(N_TARGETS) = (/ &
-      'YY2554021','YY2553244','YY2553171','YY2553149','YY2553091', &
-      'YY2553044','YY2552963','YY2552881','YY2552875','YY2352649' /)
-    integer :: cnt_gt1e6, cnt_gt1e8, cnt_gt1e12
-    real(kind=r8) :: minpos, maxF, sumF
-      logical :: is_target
-      integer :: t
+  integer :: cnt_gt1e6, cnt_gt1e8, cnt_gt1e12
+  real(kind=r8) :: minpos, maxF, sumF
       integer :: outunit, l
       character(len=128) :: fname
       character(len=32) :: itmp, jtmp
@@ -227,109 +219,8 @@ module renPED
   write(*,*) '>>> renumped: calling compute_inbreeding (colleau_mod)'
   call timestamp()
   call set_colleau_verbose(.true.)
-  ! Build debug target index list (mapped REF indices) and pass to colleau_mod
-  dbg_count = 0
-  if (allocated(dbg_idx)) deallocate(dbg_idx)
-  allocate(dbg_idx(N_TARGETS))
-  do t = 1, N_TARGETS
-    tmp_i = -1
-    do i = 1, NREC
-      if (trim(REF(i)%ID) == trim(targets(t))) then
-        tmp_i = i
-        exit
-      end if
-    end do
-    if (tmp_i /= -1) then
-      dbg_count = dbg_count + 1
-      dbg_idx(dbg_count) = tmp_i
-    end if
-  end do
-  if (dbg_count > 0) then
-    call set_colleau_debug_targets(dbg_count, dbg_idx)
-  end if
-  ! Detailed diagnostics for specific target IDs: print ancestor lists, weights and dot
+  ! Per-target diagnostics removed; proceed to compute inbreeding
   maxanc = min(NREC, MAXANC_LIMIT)
-  do t = 1, N_TARGETS
-    ! find mapping index for target ID in REF
-    is_target = .false.
-    do i = 1, NREC
-      if(trim(REF(i)%ID) == trim(targets(t))) then
-        is_target = .true.
-        exit
-      end if
-    end do
-    if (.not. is_target) then
-      write(*,'(A,A)') 'DIAG: target not found: ', targets(t)
-      cycle
-    end if
-    write(*,'(A,A,I6)') 'DIAG: target ', trim(targets(t)), i
-    ! get sire/dam numeric indices for this mapped index
-    if (i < 1 .or. i > NREC) cycle
-    j = sire_arr(i)
-    k = dam_arr(i)
-    write(*,'(A,I6,2X,A,I6)') '  sire_idx=', j, '  dam_idx=', k
-    if (j == 0 .or. k == 0) then
-      write(*,'(A)') '  DIAG: one or both parents missing (index 0)'
-      cycle
-    end if
-    allocate(anc_s(maxanc), anc_d(maxanc))
-    allocate(val_s(maxanc), val_d(maxanc))
-    anc_s = 0; anc_d = 0
-    val_s = 0.0_r8; val_d = 0.0_r8
-    n_s = 0; n_d = 0
-    call build_contrib_sparse_local(j, sire_arr, dam_arr, anc_s, val_s, n_s, maxanc)
-    call build_contrib_sparse_local(k, sire_arr, dam_arr, anc_d, val_d, n_d, maxanc)
-    write(*,'(A,I6,2X,A,I6)') '  DIAG: n_s=', n_s, ' n_d=', n_d
-    a_sd_re = dot_sparse_local(anc_s, val_s, n_s, anc_d, val_d, n_d)
-    write(*,'(A,ES24.16)') '  DIAG: dot(anc_s,anc_d)=', a_sd_re
-    write(*,'(A)') '  DIAG: sample ancestors (anc, val_s, val_d) up to 30:'
-    ! Also write full-precision diagnostics to a per-target file
-    fname = 'diag_'//trim(adjustl(targets(t)))//'.txt'
-    open(newunit=outunit, file=trim(fname), status='replace', action='write', iostat=ios)
-    if (ios /= 0) then
-      write(*,'(A,A)') 'DIAG: cannot open file ', trim(fname)
-    else
-      write(outunit,'(A)') 'DIAGNOSTIC DUMP FOR TARGET: '//trim(targets(t))
-      write(outunit,'(A,I0,2X,A,I0)') 'sire_idx=', j, 'dam_idx=', k
-      write(outunit,'(A,ES30.20)') 'dot(anc_s,anc_d)=', a_sd_re
-      write(outunit,'(A)') 'ancestor list (index, anc_id, val_s):'
-      do ii = 1, n_s
-        ix = anc_s(ii)
-        if (ix == 0) cycle
-        write(outunit,'(I8,1X,I8,1X,ES30.20)') ii, ix, val_s(ii)
-      end do
-      write(outunit,'(A)') 'matching common ancestors (ii, anc_id, val_s, val_d):'
-      do ii = 1, n_s
-        ix = anc_s(ii)
-        if (ix == 0) cycle
-        do jx = 1, n_d
-          if (anc_d(jx) == ix) then
-            write(outunit,'(I8,1X,I8,1X,ES30.20,1X,ES30.20)') ii, ix, val_s(ii), val_d(jx)
-            exit
-          end if
-        end do
-      end do
-      close(outunit)
-    end if
-    do ii = 1, min(30, n_s)
-      ix = anc_s(ii)
-      if (ix == 0) cycle
-      write(*,'(I6,1X,I8,1X,ES24.16)') ii, ix, val_s(ii)
-    end do
-    ! print matching anc entries and both weights
-    do ii = 1, n_s
-      ix = anc_s(ii)
-      if (ix == 0) cycle
-      ! find in anc_d
-      do jx = 1, n_d
-        if (anc_d(jx) == ix) then
-          write(*,'(A,I6,1X,I8,1X,ES24.16,1X,ES24.16)') '    COMMON:', ii, ix, val_s(ii), val_d(jx)
-          exit
-        end if
-      end do
-    end do
-    deallocate(anc_s, anc_d, val_s, val_d)
-  end do
   ! Diagnostic: sample mapping of indices -> IDs and founder counts
   do i = 1, min(50, NREC)
     write(*,*) 'MAP index=', i, 'ID=', trim(REF(i)%ID)
@@ -346,17 +237,11 @@ module renPED
     if (sire_arr(i) == 0 .or. dam_arr(i) == 0) ii = ii + 1
   end do
   write(*,'(A,I8)') 'Number of records with at least one missing parent:', ii
-  ! Check presence of user-provided target IDs in hash/REF
-  write(*,*) 'Target presence check:'
-  do t = 1, N_TARGETS
-    call h%get_value(targets(t), NX(1), status)
-    if (status == -1) then
-      write(*,'(A,A)') '  Target not found: ', targets(t)
-    else
-      write(*,*) '  Target found:', trim(targets(t)), 'map ID=', trim(NX(1)%ASD(1)), 'NASD=', NX(1)%NASD(1)
-    end if
-  end do
+  ! (previous per-target presence checks removed)
+  ! Compute inbreeding using Colleau sparse routine (production)
   call compute_inbreeding(NREC, sire_arr, dam_arr, F)
+
+  ! Tabular fallback and comparison removed for production build
   ! quick check: print first few F values returned
   do i = 1, min(10,NREC)
     write(*,'(A,I6,2X,ES18.12)') 'SAMPLE F[', i, F(i)

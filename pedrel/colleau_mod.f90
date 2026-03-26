@@ -6,8 +6,7 @@ module colleau_mod
   integer(kind=ki4), save :: max_ns = 0
   integer(kind=ki4), save :: max_nd = 0
   logical, save :: verbose = .false.
-  integer(kind=ki4), allocatable, save :: dbg_targets(:)
-  integer(kind=ki4), save :: n_dbg_targets = 0
+  
   
   ! Colleau 관련 서브루틴 모듈
   ! use real(kind=r8) for double precision
@@ -18,18 +17,6 @@ contains
     verbose = flag
   end subroutine set_colleau_verbose
 
-  subroutine set_colleau_debug_targets(n, targets)
-    integer(kind=ki4), intent(in) :: n
-    integer(kind=ki4), intent(in) :: targets(:)
-    if (allocated(dbg_targets)) deallocate(dbg_targets)
-    if (n > 0) then
-      allocate(dbg_targets(n))
-      dbg_targets = targets(1:n)
-      n_dbg_targets = n
-    else
-      n_dbg_targets = 0
-    end if
-  end subroutine set_colleau_debug_targets
 
 
   subroutine build_contrib_sparse_local(start, sire, dam, anc, val, nanc, maxanc)
@@ -52,9 +39,10 @@ contains
     anc = 0
     val = 0.0_r8
 
-    nanc = 1
-    anc(1) = start
-    val(1) = 1.0_r8
+    ! We'll traverse ancestors starting at `start`, but only record
+    ! contributions for founders (animals with no parents). This builds
+    ! k-vectors over founders which matches the tabular method.
+    nanc = 0
 
     top = 1
     stack(1) = start
@@ -66,23 +54,27 @@ contains
       curr_w = wstack(top)
       ! pop
       top = top - 1
-
       s = 0; d = 0
       if (k >= 1 .and. k <= size(sire)) then
         s = sire(k)
         d = dam(k)
       end if
 
+      ! Accumulate contribution for founders always; for non-founders,
+      ! record contributions for all ancestors except the starting node.
+      ! This ensures founders (including when start is a founder) are
+      ! captured while avoiding duplicating the start's self-contribution
+      ! when not appropriate.
+      ! Record this node's contribution (including the start node).
+      call accum_local(k, curr_w, anc, val, nanc)
+      ! If node has parents, push them for further expansion with half weight
       if (s > 0) then
-        call accum_local(s, 0.5_r8*curr_w, anc, val, nanc)
         top = top + 1
         if (top > maxanc) stop 'stack overflow in build_contrib_sparse_local'
         stack(top) = s
         wstack(top) = 0.5_r8*curr_w
       end if
-
       if (d > 0) then
-        call accum_local(d, 0.5_r8*curr_w, anc, val, nanc)
         top = top + 1
         if (top > maxanc) stop 'stack overflow in build_contrib_sparse_local'
         stack(top) = d
@@ -143,6 +135,8 @@ contains
     integer(kind=ki4) :: i, n_s, n_d, maxanc
     integer(kind=ki4) :: k
     integer(kind=ki4) :: ttt, jj
+    integer(kind=ki4) :: anc_id
+    real(kind=r8) :: dval
     integer :: outunit, ios
     character(len=128) :: fname
     integer(kind=ki4), allocatable :: anc_s(:), anc_d(:)
@@ -166,33 +160,41 @@ contains
         ! normal execution (no per-target debug)
         call build_contrib_sparse_local(sire(i), sire, dam, anc_s, val_s, n_s, maxanc)
         call build_contrib_sparse_local(dam(i),  sire, dam, anc_d, val_d, n_d, maxanc)
-        ! no pre-contrib debug dump
-        a_sd = dot_sparse_local(anc_s, val_s, n_s, anc_d, val_d, n_d)
-        F(i) = 0.5_r8 * a_sd
-        ! If this index is among debug targets, print detailed info
-      !$omp critical
-        if (n_dbg_targets > 0) then
-          ! declare locals outside inner loops
+        ! (no temporary debug prints here)
+        ! (diagnostic sums removed)
+        ! Compute a_sd = sum_{anc} val_s(anc)*val_d(anc)*D(anc)
+        ! where D(anc) depends on the inbreeding of anc's parents
+        a_sd = 0.0_r8
+        if (n_s > 0 .and. n_d > 0) then
+          do jj = 1, n_s
+            do k = 1, n_d
+              if (anc_s(jj) == anc_d(k)) then
+                anc_id = anc_s(jj)
+                if (anc_id >= 1 .and. anc_id <= size(sire)) then
+                  if (sire(anc_id) /= 0 .and. dam(anc_id) /= 0) then
+                    dval = 0.5_r8 - 0.25_r8*(F(sire(anc_id)) + F(dam(anc_id)))
+                  else if (sire(anc_id) /= 0 .or. dam(anc_id) /= 0) then
+                    if (sire(anc_id) /= 0) then
+                      dval = 0.75_r8 - 0.25_r8*F(sire(anc_id))
+                    else
+                      dval = 0.75_r8 - 0.25_r8*F(dam(anc_id))
+                    end if
+                  else
+                    dval = 1.0_r8
+                  end if
+                else
+                  dval = 1.0_r8
+                end if
+                a_sd = a_sd + val_s(jj) * val_d(k) * dval
+                exit
+              end if
+            end do
+          end do
         end if
-      !$omp end critical
-      if (n_dbg_targets > 0) then
-        !$omp critical
-        do ttt = 1, n_dbg_targets
-          if (i == dbg_targets(ttt)) then
-            write(*,'(A,I8,2X,A,I8)') 'DBG: compute_inbreeding: index=', i, ' n_s=', n_s
-            write(*,'(A,ES24.16,2X,A,ES24.16)') 'DBG: a_sd=', a_sd, ' F(i)=', F(i)
-            write(*,'(A)') 'DBG: sample anc_s (idx,anc,val_s) up to 20:'
-            do jj = 1, min(20,n_s)
-              write(*,'(I6,1X,I8,1X,ES24.16)') jj, anc_s(jj), val_s(jj)
-            end do
-            write(*,'(A)') 'DBG: sample anc_d (idx,anc,val_d) up to 20:'
-            do jj = 1, min(20,n_d)
-              write(*,'(I6,1X,I8,1X,ES24.16)') jj, anc_d(jj), val_d(jj)
-            end do
-          end if
-        end do
-        !$omp end critical
-      end if
+        ! Now a_sd represents A(s,d); inbreeding F = 0.5 * A(s,d)
+        F(i) = 0.5_r8 * a_sd
+      ! (DBG_ASSIGN removed)
+        ! (per-target debug logic removed)
         ! update global maxima (thread-safe)
       !$omp critical
         if (n_s > max_ns) max_ns = n_s
@@ -333,4 +335,71 @@ contains
     deallocate(x, y)
   end subroutine write_triplets
 
+  ! ------------------------------------------------------------------
+  ! Exact tabular inbreeding + A-matrix builder (fallback)
+  ! Computes full A (dense) by recursion and returns F.
+  subroutine compute_inbreeding_tabular(n, sire, dam, F, writeA, filename)
+    implicit none
+    integer(kind=ki4), intent(in) :: n
+    integer(kind=ki4), intent(in) :: sire(n), dam(n)
+    real(kind=r8), intent(out) :: F(n)
+    logical, intent(in), optional :: writeA
+    character(len=*), intent(in), optional :: filename
+
+    real(kind=r8), allocatable :: A(:,:)
+    integer :: i, j, si, di
+    logical :: do_write
+    character(len=256) :: fname
+    integer :: unit, ios
+
+    allocate(A(n,n))
+    A = 0.0_r8
+    F = 0.0_r8
+
+    do i = 1, n
+      si = sire(i)
+      di = dam(i)
+      if (si == 0 .and. di == 0) then
+        ! founder
+        A(i,i) = 1.0_r8
+      else
+        ! fill lower triangle A(i,1:i-1)
+        do j = 1, i-1
+          A(i,j) = 0.0_r8
+          if (si /= 0) A(i,j) = A(i,j) + A(si,j)
+          if (di /= 0) A(i,j) = A(i,j) + A(di,j)
+          A(i,j) = 0.5_r8 * A(i,j)
+          A(j,i) = A(i,j)
+        end do
+        if (si /= 0 .and. di /= 0) then
+          F(i) = 0.5_r8 * A(si,di)
+        else
+          F(i) = 0.0_r8
+        end if
+        A(i,i) = 1.0_r8 + F(i)
+      end if
+    end do
+
+    do_write = .false.
+    if (present(writeA)) do_write = writeA
+    if (do_write .and. present(filename)) then
+      fname = filename
+      open(newunit=unit, file=trim(fname), status='replace', action='write', iostat=ios)
+      if (ios == 0) then
+        do i = 1, n
+          do j = 1, i
+            if (abs(A(i,j)) > 0.0_r8) write(unit,'(I8,1x,I8,1x,ES16.8)') i, j, A(i,j)
+          end do
+        end do
+        close(unit)
+      else
+        write(*,*) 'Cannot open triplet file:', trim(fname)
+      end if
+    end if
+
+    deallocate(A)
+
+  end subroutine compute_inbreeding_tabular
+
 end module colleau_mod
+

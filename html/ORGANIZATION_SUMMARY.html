@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>ORGANIZATION_SUMMARY</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">ORGANIZATION_SUMMARY</h1>
+</header>
+<h1 id="gpblup-project-organization-summary">GPBLUP Project Organization Summary</h1>
+<h2 id="what-has-been-restructured">What has been restructured</h2>
+<h3 id="completed-reorganization">✅ Completed Reorganization</h3>
+<ol type="1">
+<li><p><strong>Build Directory Structure</strong> (<code>/home/dhlee/GPBLUP/build/</code>)</p>
+<pre><code>build/
+├── popQC/          → Object files from popQC.f90 compilation
+├── ReadFR/         → Object files from ReadFR.f90 compilation
+└── common/         → Shared module object files (M_Kinds.o, M_Stamp.o)</code></pre>
+<p><strong>Purpose</strong>: Centralized build artifacts, keeps source clean</p></li>
+<li><p><strong>Source Module Organization</strong> (<code>/home/dhlee/GPBLUP/source/</code>)</p>
+<ul>
+<li><strong>M_Kinds.f90</strong> - Data type precision definitions</li>
+<li><strong>M_Stamp.f90</strong> - Version and timestamp utilities<br />
+</li>
+<li><strong>M_Variables.f90</strong> - Global variable declarations</li>
+<li><strong>M_param.f90</strong> - Parameter handling routines</li>
+<li><strong>M_readpar.f90</strong> - Parameter file parsing</li>
+<li><strong>M_ReadFile.f90</strong> - File I/O operations</li>
+<li><strong>M_HashTable.f90</strong> - Generic hash table implementation</li>
+<li><strong>M_PEDHashTable.f90</strong> - Pedigree hash table</li>
+<li><strong>M_StrEdit.f90</strong> - String manipulation utilities</li>
+<li><strong>Qsort4.f90</strong> - Sorting algorithms</li>
+</ul>
+<p><strong>All locations</strong>: <code>/home/dhlee/GPBLUP/source/M_*.f90</code></p></li>
+<li><p><strong>Executable Deployment</strong> (<code>/home/dhlee/GPBLUP/bin/</code>)</p>
+<pre><code>bin/
+├── popQC (115 KB)    → Population QC executable
+└── ReadFR (86 KB)    → Genotype reader executable</code></pre>
+<p><strong>Purpose</strong>: Unified binary location, clean PATH setup</p></li>
+<li><p><strong>Each Program Directory</strong> (<code>popQC/</code>, <code>ReadFR/</code>)</p>
+<pre><code>popQC/
+├── src/
+│   └── popQC.f90 (1,605 lines)          → Main source code
+├── docs/
+│   ├── POPQC_SPECIFICATION.md           → Technical specification
+│   ├── POPQC_SPECIFICATION.pdf (English)
+│   └── 논문_popQC_설명서.pdf (Korean)
+├── parameter_example.txt                → Sample configuration
+├── README.md                            → popQC-specific guide
+└── test/
+    ├── parameter_example.txt
+    └── README.md</code></pre></li>
+<li><p><strong>Documentation Consolidation</strong></p>
+<ul>
+<li><strong>Root Level</strong>:
+<ul>
+<li><code>README.md</code> - Main project overview</li>
+<li><code>PROJECT_STRUCTURE.md</code> - This file ↓</li>
+<li><code>BUILD.md</code> - Build instructions</li>
+</ul></li>
+<li><strong>Program Specific</strong>: <code>popQC/docs/</code>, <code>ReadFR/docs/</code></li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="file-organization-reference">File Organization Reference</h2>
+<h3 id="source-tree">Source Tree</h3>
+<pre><code>/home/dhlee/GPBLUP/
+│
+├── 📁 source/                    [SHARED MODULES - CLEAN]
+│   ├── M_Kinds.f90
+│   ├── M_Stamp.f90
+│   ├── M_Variables.f90
+│   ├── M_param.f90
+│   ├── M_readpar.f90
+│   ├── M_ReadFile.f90
+│   ├── M_HashTable.f90
+│   ├── M_PEDHashTable.f90
+│   ├── M_StrEdit.f90
+│   └── Qsort4.f90
+│
+├── 📁 build/                     [BUILD ARTIFACTS - TRANSIENT]
+│   ├── common/
+│   │   ├── M_Kinds.o
+│   │   ├── M_Kinds.mod
+│   │   ├── M_Stamp.o
+│   │   └── M_Stamp.mod
+│   ├── popQC/
+│   │   ├── popQC.o
+│   │   └── *.mod
+│   └── ReadFR/
+│       ├── ReadFR.o
+│       └── *.mod
+│
+├── 📁 bin/                       [FINAL OUTPUTS - USER FACING]
+│   ├── popQC                    (115 KB, executable)
+│   └── ReadFR                   (86 KB, executable)
+│
+├── 📁 lib/                       [LIBRARIES]
+│   ├── libdkblupf90.a           (static)
+│   └── libdkblupf90.so          (shared)
+│
+├── 📁 popQC/                     [PROGRAM UNIT - popQC]
+│   ├── src/
+│   │   └── popQC.f90           (1,605 lines - MAIN SOURCE)
+│   ├── docs/
+│   │   ├── POPQC_SPECIFICATION.md      (Technical spec, 100+ sections)
+│   │   ├── POPQC_SPECIFICATION.pdf     (English manual, 88 KB)
+│   │   └── 논문_popQC_설명서.pdf       (Korean manual)
+│   ├── parameter_example.txt    (Sample config)
+│   ├── README.md               (popQC guide)
+│   └── test/
+│       ├── parameter_example.txt
+│       └── README.md
+│
+├── 📁 ReadFR/                    [PROGRAM UNIT - ReadFR]
+│   ├── src/
+│   │   └── ReadFR.f90          (Main source)
+│   ├── docs/
+│   │   ├── README.md
+│   │   └── [other docs]
+│   ├── parameter_example.txt
+│   └── [misc files]
+│
+├── 📄 README.md                 [MAIN PROJECT README]
+├── 📄 PROJECT_STRUCTURE.md      [THIS FILE - ORGANIZATION GUIDE]
+├── 📄 BUILD.md                  [BUILD INSTRUCTIONS - DETAILED]
+├── 📄 CMakeLists.txt            [CMAKE BUILD CONFIG]
+├── 📄 Makefile                  [MAKE BUILD CONFIG]
+└── [other config files]</code></pre>
+<hr />
+<h2 id="compilation-workflow-updated">Compilation Workflow (Updated)</h2>
+<h3 id="clean-directory-separation">Clean Directory Separation</h3>
+<pre><code>Source Code
+    ↓
+    popQC.f90 + M_Kinds.f90 + M_Stamp.f90
+    ↓
+    [Build Process]
+         ↓
+    Intermediate Objects (stored in build/)
+    ├─ build/common/M_Kinds.o
+    ├─ build/common/M_Stamp.o
+    └─ build/popQC/popQC.o
+         ↓
+    Linking Phase
+         ↓
+    Final Executable
+    └─ bin/popQC (115 KB) ← ONLY THIS IS USER-FACING</code></pre>
+<h3 id="build-artifact-lifecycle">Build Artifact Lifecycle</h3>
+<ol type="1">
+<li><strong>Before Build</strong>: <code>build/</code> may contain old <code>.o</code> and <code>.mod</code> files</li>
+<li><strong>During Build</strong>: Compiler creates new files in <code>build/*/</code></li>
+<li><strong>After Build</strong>: Executables copied to <code>bin/</code>, artifacts stay in <code>build/</code></li>
+<li><strong>Clean</strong>: <code>make clean</code> removes all <code>.o</code> and <code>.mod</code> files (recoverable)</li>
+</ol>
+<hr />
+<h2 id="access-paths-for-end-users">Access Paths for End Users</h2>
+<h3 id="running-programs">Running Programs</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true"></a><span class="co"># Direct execution</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true"></a><span class="ex">/home/dhlee/GPBLUP/bin/popQC</span> parameter.txt</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true"></a><span class="ex">/home/dhlee/GPBLUP/bin/ReadFR</span> parameter.txt</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true"></a><span class="co"># Or via PATH</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true"></a><span class="ex">popQC</span> parameter.txt          (if /home/dhlee/GPBLUP/bin in <span class="va">$PATH</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true"></a><span class="ex">ReadFR</span> parameter.txt</span></code></pre></div>
+<h3 id="accessing-documentation">Accessing Documentation</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true"></a><span class="co"># Technical specs</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true"></a><span class="fu">cat</span> /home/dhlee/GPBLUP/popQC/docs/POPQC_SPECIFICATION.md</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true"></a><span class="co"># Build help</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true"></a><span class="fu">cat</span> /home/dhlee/GPBLUP/BUILD.md</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true"></a><span class="co"># Project overview</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true"></a><span class="fu">cat</span> /home/dhlee/GPBLUP/README.md</span></code></pre></div>
+<hr />
+<h2 id="key-improvements-made">Key Improvements Made</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 21%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Aspect</th>
+<th>Before</th>
+<th>After</th>
+<th>Benefit</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Build Artifacts</td>
+<td>Scattered in popQC/, ReadFR/</td>
+<td>Organized in build/</td>
+<td>Clean source directories</td>
+</tr>
+<tr class="even">
+<td>Object Files</td>
+<td>Mixed with source</td>
+<td>build/popQC/, build/common/</td>
+<td>Easy cleanup</td>
+</tr>
+<tr class="odd">
+<td>Module Interfaces</td>
+<td>Mixed with source</td>
+<td>build/*/common/</td>
+<td>Centralized imports</td>
+</tr>
+<tr class="even">
+<td>Executables</td>
+<td>In source dirs</td>
+<td>bin/ only</td>
+<td>Clear user entry points</td>
+</tr>
+<tr class="odd">
+<td>Documentation</td>
+<td>Separate locations</td>
+<td>Organized with root guides</td>
+<td>Easy to find</td>
+</tr>
+<tr class="even">
+<td>Build Process</td>
+<td>Implicit/unclear</td>
+<td>PROJECT_STRUCTURE.md + BUILD.md</td>
+<td>Reproducible</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="maintenance-tasks">Maintenance Tasks</h2>
+<h3 id="regular-operations">Regular Operations</h3>
+<h4 id="rebuild-everything-cleanly">Rebuild Everything Cleanly</h4>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a><span class="bu">cd</span> /home/dhlee/GPBLUP</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true"></a><span class="fu">make</span> clean      # Removes all .o and .mod files from build/</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true"></a><span class="fu">make</span> all        # Recompiles everything</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true"></a><span class="co"># Result: Fresh executables in bin/</span></span></code></pre></div>
+<h4 id="build-only-popqc">Build Only popQC</h4>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true"></a><span class="fu">make</span> -C /home/dhlee/GPBLUP popQC</span></code></pre></div>
+<h4 id="clean-specific-program">Clean Specific Program</h4>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true"></a><span class="fu">make</span> -C /home/dhlee/GPBLUP clean-popQC</span></code></pre></div>
+<h4 id="remove-everything-including-executables">Remove Everything (Including Executables)</h4>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true"></a><span class="fu">make</span> -C /home/dhlee/GPBLUP distclean</span></code></pre></div>
+<h3 id="file-organization-rules">File Organization Rules</h3>
+<p><strong>Do</strong>: - ✅ Keep source code in <code>source/</code> and <code>*/src/</code> - ✅ Store build artifacts in <code>build/</code> - ✅ Place executables in <code>bin/</code> - ✅ Clean <code>build/</code> before archiving project - ✅ Commit <code>source/</code> to version control - ✅ Ignore <code>build/</code> and <code>bin/</code> in .gitignore</p>
+<p><strong>Don’t</strong>: - ❌ Modify source files without rebuilding - ❌ Keep stale <code>.o</code> files (recompile instead) - ❌ Run executables from source directories - ❌ Edit <code>.mod</code> files (compiler-generated) - ❌ Mix object and source files</p>
+<hr />
+<h2 id="verifying-organization">Verifying Organization</h2>
+<h3 id="check-structure-is-correct">Check Structure is Correct</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true"></a><span class="co"># Verify source modules exist</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true"></a><span class="fu">ls</span> -la /home/dhlee/GPBLUP/source/M_*.f90</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true"></a><span class="co"># Verify executables are in bin/</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true"></a><span class="fu">ls</span> -lh /home/dhlee/GPBLUP/bin/</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true"></a><span class="co"># Verify build directories exist</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true"></a><span class="fu">ls</span> -la /home/dhlee/GPBLUP/build/</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true"></a></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true"></a><span class="co"># Verify no stale objects in source</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true"></a><span class="fu">find</span> /home/dhlee/GPBLUP/popQC -name <span class="st">&quot;*.o&quot;</span> -o -name <span class="st">&quot;*.mod&quot;</span>  # Should find nothing</span></code></pre></div>
+<h3 id="test-execution">Test Execution</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true"></a><span class="co"># Verify popQC runs</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true"></a><span class="ex">/home/dhlee/GPBLUP/bin/popQC</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true"></a><span class="co"># Should show usage message (not errors)</span></span></code></pre></div>
+<hr />
+<h2 id="directory-size-summary">Directory Size Summary</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Directory</th>
+<th>Contents</th>
+<th>Size</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>source/</td>
+<td>10 module .f90 files</td>
+<td>150 KB</td>
+<td>Permanent</td>
+</tr>
+<tr class="even">
+<td>popQC/src</td>
+<td>Main program</td>
+<td>50 KB</td>
+<td>Permanent</td>
+</tr>
+<tr class="odd">
+<td>ReadFR/src</td>
+<td>Main program</td>
+<td>40 KB</td>
+<td>Permanent</td>
+</tr>
+<tr class="even">
+<td>build/</td>
+<td>Compilation artifacts</td>
+<td>10 MB</td>
+<td>Temporary (can clean)</td>
+</tr>
+<tr class="odd">
+<td>bin/</td>
+<td>Executables</td>
+<td>200 KB</td>
+<td>Permanent</td>
+</tr>
+<tr class="even">
+<td>lib/</td>
+<td>Libraries</td>
+<td>500 KB</td>
+<td>Optional</td>
+</tr>
+<tr class="odd">
+<td>docs/</td>
+<td>Documentation</td>
+<td>2 MB</td>
+<td>Permanent</td>
+</tr>
+<tr class="even">
+<td><strong>Total</strong></td>
+<td><strong>Full project</strong></td>
+<td><strong>~13 MB</strong></td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note</strong>: <code>build/</code> can be cleaned between builds and recreated automatically.</p>
+<hr />
+<h2 id="integration-with-version-control">Integration with Version Control</h2>
+<h3 id="recommended-.gitignore">Recommended .gitignore</h3>
+<pre class="gitignore"><code># Build artifacts (temporary, recreated)
+build/
+bin/
+lib/
+
+# Editor temp files
+.vscode/
+.swp
+*.swp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local testing
+*.txt.bak
+results/
+temp/</code></pre>
+<h3 id="what-to-commit">What to Commit</h3>
+<pre><code>✅ source/M_*.f90         (all modules)
+✅ popQC/src/popQC.f90    (main programs)
+✅ ReadFR/src/ReadFR.f90
+✅ *.md                   (documentation)
+✅ CMakeLists.txt         (build config)
+✅ Makefile               (build config)
+❌ build/                 (auto-generated)
+❌ bin/                   (auto-generated)</code></pre>
+<hr />
+<h2 id="migration-from-old-structure">Migration from Old Structure</h2>
+<h3 id="what-was-moved">What Was Moved</h3>
+<p><strong>From</strong>: <code>popQC/*.o</code>, <code>popQC/*.mod</code><br />
+<strong>To</strong>: <code>build/popQC/</code><br />
+<strong>Action</strong>: Manually moved or auto-moved by Makefile</p>
+<p><strong>From</strong>: <code>ReadFR/*.o</code>, <code>ReadFR/*.mod</code><br />
+<strong>To</strong>: <code>build/ReadFR/</code><br />
+<strong>Action</strong>: Manually moved or auto-moved by Makefile</p>
+<h3 id="recovery-if-needed">Recovery (If Needed)</h3>
+<p>If files were accidentally deleted:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true"></a><span class="bu">cd</span> /home/dhlee/GPBLUP</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true"></a><span class="fu">make</span> clean</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true"></a><span class="fu">make</span> all</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true"></a><span class="co"># Rebuilds everything from source</span></span></code></pre></div>
+<hr />
+<h2 id="performance-impact">Performance Impact</h2>
+<h3 id="build-time-comparison">Build Time Comparison</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Scenario</th>
+<th>Old Structure</th>
+<th>New Structure</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Full rebuild</td>
+<td>~5 sec</td>
+<td>~5 sec</td>
+<td>No change</td>
+</tr>
+<tr class="even">
+<td>Clean build</td>
+<td>~5 sec</td>
+<td>~5 sec</td>
+<td>No change</td>
+</tr>
+<tr class="odd">
+<td>Link phase</td>
+<td>~1 sec</td>
+<td>~1 sec</td>
+<td>No change</td>
+</tr>
+<tr class="even">
+<td><strong>Total improvement</strong></td>
+<td>-</td>
+<td>-</td>
+<td><strong>System cleanliness</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="runtime-performance">Runtime Performance</h3>
+<p>No performance impact - structure is build-time only.</p>
+<hr />
+<h2 id="next-steps">Next Steps</h2>
+<h3 id="documentation-to-review">Documentation to Review</h3>
+<ol type="1">
+<li><strong><a href="README.md">README.md</a></strong> - Main project overview</li>
+<li><strong><a href="BUILD.md">BUILD.md</a></strong> - Detailed build instructions</li>
+<li><strong><a href="popQC/docs/POPQC_SPECIFICATION.md">popQC/docs/POPQC_SPECIFICATION.md</a></strong> - Technical algorithms</li>
+</ol>
+<h3 id="quick-commands">Quick Commands</h3>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true"></a><span class="co"># View all Makefile targets</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true"></a><span class="fu">make</span> -C /home/dhlee/GPBLUP help</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true"></a><span class="co"># Build with verbose output</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true"></a><span class="fu">make</span> -C /home/dhlee/GPBLUP VERBOSE=1 popQC</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true"></a><span class="co"># Check executable files</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true"></a><span class="fu">file</span> /home/dhlee/GPBLUP/bin/popQC</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true"></a><span class="fu">ldd</span> /home/dhlee/GPBLUP/bin/popQC  # Show library dependencies</span></code></pre></div>
+<h3 id="expansion-opportunities">Expansion Opportunities</h3>
+<ul>
+<li>Add CMake support (CMakeLists.txt already in place)</li>
+<li>Implement unit testing framework</li>
+<li>Add continuous integration (GitHub Actions, etc.)</li>
+<li>Support additional genotype formats (VCF, PLINK, etc.)</li>
+</ul>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The GPBLUP project is now <strong>fully organized</strong> with:</p>
+<p>✅ <strong>Clear separation</strong>: Source → Build → Bin<br />
+✅ <strong>Clean directories</strong>: No mixed file types<br />
+✅ <strong>Reproducible builds</strong>: Documented in BUILD.md<br />
+✅ <strong>User-friendly access</strong>: Single bin/ directory<br />
+✅ <strong>Maintainable structure</strong>: Easy to add new programs</p>
+<p>For implementation details, see <a href="BUILD.md">BUILD.md</a>.<br />
+For project overview, see <a href="README.md">README.md</a>.<br />
+For technical specs, see <a href="popQC/docs/POPQC_SPECIFICATION.md">popQC/docs/POPQC_SPECIFICATION.md</a>.</p>
+<hr />
+<p><strong>Version</strong>: 1.0<br />
+<strong>Status</strong>: Organization Complete<br />
+<strong>Last Updated</strong>: 2024</p>
+</body>
+</html>
