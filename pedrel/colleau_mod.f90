@@ -1,5 +1,6 @@
 module colleau_mod
   use M_param
+  use omp_lib
   implicit none
   integer(kind=ki4), save :: call_count = 0
   integer(kind=ki4), parameter :: PROG_STEP = 100
@@ -142,6 +143,8 @@ contains
     integer(kind=ki4), allocatable :: anc_s(:), anc_d(:)
     real(kind=r8), allocatable :: val_s(:), val_d(:)
     real(kind=r8) :: a_sd
+    real(kind=r8) :: t_start, t_end, t_elapsed, t_compute_total
+    t_compute_total = 0.0_r8
 
     F = 0.0_r8
 
@@ -152,6 +155,8 @@ contains
       if (sire(i) == 0 .or. dam(i) == 0) then
         F(i) = 0.0_r8
       else
+        ! time the per-target compute (high-resolution)
+        t_start = omp_get_wtime()
         n_s = 0; n_d = 0
         allocate(anc_s(maxanc)); allocate(anc_d(maxanc))
         allocate(val_s(maxanc)); allocate(val_d(maxanc))
@@ -193,6 +198,10 @@ contains
         end if
         ! Now a_sd represents A(s,d); inbreeding F = 0.5 * A(s,d)
         F(i) = 0.5_r8 * a_sd
+        t_end = omp_get_wtime()
+        t_elapsed = t_end - t_start
+      !$omp atomic
+        t_compute_total = t_compute_total + t_elapsed
       ! (DBG_ASSIGN removed)
         ! (per-target debug logic removed)
         ! update global maxima (thread-safe)
@@ -217,6 +226,10 @@ contains
       end if
     end do
 !$omp end parallel do
+  ! After parallel region, print maximum ancestor counts observed and timing
+  if (verbose) then
+    write(*,'(A,F8.4)') 'compute_inbreeding: total compute time (sum threads) =', t_compute_total
+  end if
   ! After parallel region, print maximum ancestor counts observed
   if (verbose) then
     call timestamp()
