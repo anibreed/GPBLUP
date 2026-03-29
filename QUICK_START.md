@@ -127,11 +127,11 @@ make
 
 ## 🔗 공통 모듈 수정 후
 
-source/ 파일 수정 → **모든 프로그램 자동 재컴파일:**
+src/ 파일 수정 → **모든 프로그램 자동 재컴파일:**
 
 ```bash
 # 1. 공통 모듈 수정
-vim source/M_Variables.f90
+vim src/M_Variables.f90
 
 # 2. 재빌드 하면 모든 프로그램이 자동 재컴파일
 make

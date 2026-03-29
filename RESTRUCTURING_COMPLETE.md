@@ -35,7 +35,7 @@ This document summarizes the complete restructuring of the GPBLUP project for op
 
 ✅ **Centralized**: All shared modules in source directory
 ```
-/home/dhlee/GPBLUP/source/       ← All 10 shared modules
+/home/dhlee/GPBLUP/src/       ← All 10 shared modules
 ├── M_Kinds.f90
 ├── M_Stamp.f90
 ├── M_Variables.f90
@@ -97,7 +97,7 @@ popQC/
 ├── 📄 ORGANIZATION_SUMMARY.md     ← What was reorganized
 ├── 📄 RESTRUCTURING_COMPLETE.md   ← This file
 │
-├── 📁 source/                     [SHARED MODULES - 10 files]
+├── 📁 src/                     [SHARED MODULES - 10 files]
 │   ├── M_Kinds.f90
 │   ├── M_Stamp.f90
 │   ├── M_Variables.f90
@@ -123,8 +123,7 @@ popQC/
 │   └── libdkblupf90.so
 │
 ├── 📁 popQC/                      [MAIN PROGRAM UNIT]
-│   ├── src/
-│   │   └── popQC.f90 (1,605 lines)
+│   ├── popQC.f90 (1,605 lines)
 │   ├── docs/
 │   │   ├── POPQC_SPECIFICATION.md (Technical spec)
 │   │   ├── POPQC_SPECIFICATION.pdf
@@ -136,8 +135,7 @@ popQC/
 │       └── README.md
 │
 ├── 📁 ReadFR/                     [SECONDARY PROGRAM UNIT]
-│   ├── src/
-│   │   └── ReadFR.f90
+│   ├── ReadFR.f90
 │   ├── docs/
 │   │   └── [documentation]
 │   ├── parameter_example.txt
@@ -156,7 +154,7 @@ popQC/
 |--------|--------|-------|---------|
 | **Build Artifacts** | Scattered in source dirs | Organized in `build/` | Clean source dirs |
 | **Object Files** | Mixed with source | `build/popQC/`, `build/common/` | Easy cleanup |
-| **Modules** | In each program dir | Centralized in `source/` | Single source of truth |
+| **Modules** | In each program dir | Centralized in `src/` | Single source of truth |
 | **Executables** | In multiple places | Central `bin/` directory | Clear entry point |
 | **Documentation** | Fragmented | Consolidated in root | Easy navigation |
 | **Build System** | Implicit steps | Documented process | Reproducible builds |
@@ -229,7 +227,7 @@ make all
 ls -lh /home/dhlee/GPBLUP/bin/
 
 # Check source modules intact
-ls /home/dhlee/GPBLUP/source/M_*.f90
+ls /home/dhlee/GPBLUP/src/M_*.f90
 
 # Check build directory exists
 ls -d /home/dhlee/GPBLUP/build/*/
@@ -350,7 +348,7 @@ ls -d /home/dhlee/GPBLUP/build/*/
 
 ## 📋 Verification Checklist
 
-- ✅ All 10 shared modules centralized in `source/`
+- ✅ All 10 shared modules centralized in `src/`
 - ✅ Build artifacts organized in `build/` directory
 - ✅ Executables centralized in `bin/` directory
 - ✅ Program-specific files organized by unit (popQC, ReadFR)

@@ -8,7 +8,7 @@
 ## 🎯 목표 달성 현황
 
 ✅ **통합 프로젝트 구조 완성**
-- 공통 모듈 (source/) 중앙화
+- 공통 모듈 (src/) 중앙화
 - 단위 프로그램 (ReadFR, popQC) 독립 개발
 - 자동 dependency 추적 및 재컴파일
 
@@ -81,7 +81,7 @@ GPBLUP/
 │   └── build.sh                          ← 빌드 스크립트
 │
 ├── 📦 공통 모듈 라이브러리
-│   └── source/                           ← 10개 공통 모듈
+│   └── src/                           ← 10개 공통 모듈
 │       ├── M_Kinds.f90
 │       ├── M_Variables.f90               ← 전역변수 정의
 │       ├── M_readpar.f90                 ← 파라미터 파서
@@ -150,7 +150,7 @@ GPBLUP/
 
 ```
 1. 모듈 수정
-   vim source/M_Variables.f90
+   vim src/M_Variables.f90
 
 2. 재빌드 (자동으로 모든 프로그램 재컴파일)
    make
@@ -197,7 +197,7 @@ add_dependencies(MyProgram gpblup_modules)
 # MyProgram은 gpblup_modules에 완전히 의존
 
 # 결과:
-# source/ 파일 수정 → gpblup_modules 재컴파일
+# src/ 파일 수정 → gpblup_modules 재컴파일
 # → MyProgram, ReadFR, popQC 모두 자동 재링크 ✓
 ```
 
@@ -255,7 +255,7 @@ M_readpar.read_parameters()
 
 ### ✅ DO (해야 할 것)
 
-- ✓ 공통 기능은 source/ 모듈에 작성
+- ✓ 공통 기능은 src/ 모듈에 작성
 - ✓ 프로그램별 로직은 각 디렉토리에 작성
 - ✓ M_readpar로 파라미터 읽기
 - ✓ 전역 변수 (M_Variables) 활용
@@ -265,7 +265,7 @@ M_readpar.read_parameters()
 
 - ✗ 각 프로그램에서 파라미터 파싱 직접 구현
 - ✗ 겹치는 기능을 여러 프로그램에서 재작성
-- ✗ source/ 모듈을 직접 수정 없이 개발
+- ✗ src/ 모듈을 직접 수정 없이 개발
 - ✗ 하드코딩된 파일명 사용
 - ✗ 에러 처리 생략
 

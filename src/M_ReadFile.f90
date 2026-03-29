@@ -175,7 +175,7 @@ integer function N_recf(filename) result(rec_N)
         rec_N = rec_N + 1
       end if
     end do
-    close(unit=unitF)
+      close(unit=unitF)
  end function N_recf
 
 integer function fopen(filename, recl)
@@ -186,8 +186,8 @@ integer function fopen(filename, recl)
     
     ! Check if file exists
     inquire(file=trim(filename), exist=file_exists)
-    if (.not. file_exists) then
-      write(*,'(A)') "ERROR: Parameter file not found: "//trim(filename)
+      if (.not. file_exists) then
+         write(*,'(A)') "ERROR: Parameter file not found: "//trim(filename)
       write(*,'(A)') "  -> Searching in current directory and common paths..."
       fopen = -1
       return

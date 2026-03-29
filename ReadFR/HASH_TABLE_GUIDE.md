@@ -13,7 +13,7 @@
 
 ## 파일 구조
 ```
-source/M_HashTable.f90    - 해시 테이블 구현
+src/M_HashTable.f90    - 해시 테이블 구현
 test_hashtable.f90        - 테스트/사용 예제
 ```
 

@@ -29,7 +29,7 @@ gfortran --version
 # Output should show: GNU Fortran (GCC) X.X.X
 
 # Check working directory
-ls /home/dhlee/GPBLUP/source/M_Kinds.f90
+ls /home/dhlee/GPBLUP/src/M_Kinds.f90
 ```
 
 ---
@@ -41,7 +41,7 @@ ls /home/dhlee/GPBLUP/source/M_Kinds.f90
 The project uses a two-tier compilation strategy:
 
 ```
-Tier 1: Shared Modules (source/)
+Tier 1: Shared Modules (src/)
 ├─ M_Kinds.f90          [Step 1] - Data type definitions
 └─ M_Stamp.f90          [Step 2] - Version/timestamp utilities
          ↓
@@ -57,7 +57,7 @@ Tier 2: Unit Programs
 **Step 1: Compile M_Kinds module**
 ```bash
 cd /home/dhlee/GPBLUP/build/common
-gfortran -c ../../source/M_Kinds.f90 \
+gfortran -c ../../src/M_Kinds.f90 \
     -ffree-line-length-none \
     -J . -I . \
     -g -O2
@@ -67,7 +67,7 @@ gfortran -c ../../source/M_Kinds.f90 \
 **Step 2: Compile M_Stamp module**
 ```bash
 cd /home/dhlee/GPBLUP/build/common
-gfortran -c ../../source/M_Stamp.f90 \
+gfortran -c ../../src/M_Stamp.f90 \
     -ffree-line-length-none \
     -J . -I . \
     -g -O2
@@ -77,7 +77,7 @@ gfortran -c ../../source/M_Stamp.f90 \
 **Step 3a: Compile popQC program**
 ```bash
 cd /home/dhlee/GPBLUP/build/popQC
-gfortran -c ../../popQC/src/popQC.f90 \
+gfortran -c ../../popQC/popQC.f90 \
     -ffree-line-length-none \
     -J . -I ../common \
     -g -O2
@@ -91,7 +91,7 @@ gfortran -o ../../bin/popQC popQC.o ../common/M_Kinds.o ../common/M_Stamp.o
 **Step 3b: Compile ReadFR program** (or skip if not needed)
 ```bash
 cd /home/dhlee/GPBLUP/build/ReadFR
-gfortran -c ../../ReadFR/src/ReadFR.f90 \
+gfortran -c ../../ReadFR/ReadFR.f90 \
     -ffree-line-length-none \
     -J . -I ../common \
     -g -O2
@@ -241,7 +241,7 @@ make -C /home/dhlee/GPBLUP all
 
 # Or manually with explicit paths
 cd /home/dhlee/GPBLUP/build/common
-gfortran -c ../../source/M_Kinds.f90 -ffree-line-length-none -J . -I .
+gfortran -c ../../src/M_Kinds.f90 -ffree-line-length-none -J . -I .
 ```
 
 ### Issue 2: "Line too long" Error
@@ -307,8 +307,8 @@ No such file or directory: M_Kinds.f90
 **Solution**:
 ```bash
 # Verify file locations
-ls -la /home/dhlee/GPBLUP/source/M_Kinds.f90
-ls -la /home/dhlee/GPBLUP/popQC/src/popQC.f90
+ls -la /home/dhlee/GPBLUP/src/M_Kinds.f90
+ls -la /home/dhlee/GPBLUP/popQC/popQC.f90
 
 # Build from root directory
 cd /home/dhlee/GPBLUP

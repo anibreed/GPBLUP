@@ -17,8 +17,8 @@ echo ""
 
 # Check if source files exist
 echo "Checking source files..."
-if [ ! -f "$PROJECT_DIR/source/M_kinds.f90" ]; then
-  echo "ERROR: source/M_kinds.f90 not found"
+if [ ! -f "$PROJECT_DIR/src/M_Kinds.f90" ]; then
+  echo "ERROR: src/M_Kinds.f90 not found"
   exit 1
 fi
 echo "✓ Source files found"

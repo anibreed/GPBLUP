@@ -50,7 +50,8 @@ program ReadFR
    character(len=LEN_STR) :: animal_id, snp_id, genotype_str, prev_id, raw_animal_key
    character(len=2) :: genotype_code
   character(len=MAX_RECL) :: raw_file_name
-  character(len=MAX_STR) :: date_prefix
+   character(len=MAX_STR) :: date_prefix, fr_basename
+   integer :: slash_pos
   type(PEDInfo) :: ani_ped
 
   version_str = '1.5 - Numericalization for FinalReport file to Compatible GENO Output'
@@ -150,7 +151,19 @@ program ReadFR
 
   ! 2. 출력 파일명 생성: GENO_[YYMMDD].txt
   raw_file_name = trim(adjustl(FRFile%FileName))
-  date_prefix = raw_file_name(1:6)
+  slash_pos = scan(raw_file_name, '/', back=.true.)
+  if (slash_pos > 0) then
+     fr_basename = raw_file_name(slash_pos+1:)
+  else
+     fr_basename = raw_file_name
+  end if
+
+  if (len_trim(fr_basename) >= 6) then
+     date_prefix = fr_basename(1:6)
+  else
+     date_prefix = "FRDATA"
+  end if
+
   base_out_file = "GENO_" // trim(date_prefix)
   out_file = trim(base_out_file) // ".txt"
   inquire(file=trim(out_file), exist=out_exists)
@@ -164,6 +177,24 @@ program ReadFR
      end do
   end if
   print *, "Output file: ", trim(out_file)
+
+  inquire(file=trim(MAPFile%FileName), exist=out_exists)
+  if (.not. out_exists) then
+     print *, "ERROR: MAP file not found: ", trim(MAPFile%FileName)
+     stop 2
+  end if
+
+  inquire(file=trim(PEDFile%FileName), exist=out_exists)
+  if (.not. out_exists) then
+     print *, "ERROR: PED file not found: ", trim(PEDFile%FileName)
+     stop 2
+  end if
+
+  inquire(file=trim(raw_file_name), exist=out_exists)
+  if (.not. out_exists) then
+     print *, "ERROR: FR file not found: ", trim(raw_file_name)
+     stop 2
+  end if
 
   ! 3. MAP & PED 로드
   call mht_load_map_file(MHT_MAP, MapInfo, nSNP, quiet=.true.)
@@ -198,6 +229,10 @@ program ReadFR
   
   ! 4. FinalReport 1차 스캔: 개체 리스트 확보
   unitF = fopen(raw_file_name)
+  if (unitF < 0) then
+     print *, "ERROR: Failed to open FR file: ", trim(raw_file_name)
+     stop 2
+  end if
   do i = 1, FRFile%Header; read(unitF, '(A)'); end do
   
   nFR_Animals = 0

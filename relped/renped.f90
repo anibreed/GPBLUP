@@ -32,6 +32,8 @@ module renPED
   integer(kind=ki4) :: NREC, NRECTot, unt, NA, n, i, j, ii, ix, jx, ios, stats(3), status
   integer(kind=ki4) :: k
   integer(kind=ki4) :: mapi, sire_idx, dam_idx
+  integer(kind=ki4), allocatable :: anc_stack(:)
+  integer(kind=ki4) :: stk_top, ref_idx, pidx
   logical :: found
   integer(kind=ki4), allocatable :: sire_arr(:), dam_arr(:)
   logical :: use_gpu_l
@@ -95,11 +97,9 @@ module renPED
   print*,"end read PEDFile data", NREC
   print*,"Ped File: Hash  size = ", h%hash_mask,"    Hash filled(No. of animal on PED) = ", h%n_keys_stored
   if(ref_ok) then
-   if(rel_cal) then
-    NREC= N_recf(REFFile)
-    allocate(REFAnim(NREC))
-    REFAnim=missC
-   endif   
+   NREC= N_recf(REFFile)
+   allocate(REFAnim(NREC))
+   REFAnim=missC
    unt = fopen(REFFile,MAX_RECL)
    NA=0
    do
@@ -119,7 +119,7 @@ module renPED
      NX(1)%GEN = 0
      NX(1)%OBS=NX(1)%OBS+1
      call h%ustore_value(NX(1)%ASD(1),NX(1))
-     if(rel_cal) REFAnim(NA)=SV(REFinfo(1))
+     REFAnim(NA)=SV(REFinfo(1))
    enddo
    close(unt)
    NREC=NA
@@ -148,7 +148,59 @@ module renPED
  !    call sleep(10)
  endif
 
- NREC=h%n_keys_stored
+ ! Explicitly include REF animals and all their ancestors.
+ if (ref_ok .and. allocated(REFAnim)) then
+   allocate(anc_stack(h%n_keys_stored))
+   stk_top = 0
+
+   do k = 1, size(REFAnim)
+     if (len_trim(REFAnim(k)) == 0) cycle
+     ref_idx = h%get_index(REFAnim(k))
+     if (ref_idx == -1) cycle
+     if (h%vals(ref_idx)%OBS <= 0) then
+       h%vals(ref_idx)%OBS = 1
+     end if
+     stk_top = stk_top + 1
+     anc_stack(stk_top) = ref_idx
+   end do
+
+   do while (stk_top > 0)
+     ref_idx = anc_stack(stk_top)
+     stk_top = stk_top - 1
+
+     if (h%vals(ref_idx)%ASD(2) /= missA) then
+       pidx = h%get_index(h%vals(ref_idx)%ASD(2))
+       if (pidx /= -1 .and. h%vals(pidx)%OBS <= 0) then
+         h%vals(pidx)%OBS = 1
+         stk_top = stk_top + 1
+         anc_stack(stk_top) = pidx
+       end if
+     end if
+
+     if (h%vals(ref_idx)%ASD(3) /= missA) then
+       pidx = h%get_index(h%vals(ref_idx)%ASD(3))
+       if (pidx /= -1 .and. h%vals(pidx)%OBS <= 0) then
+         h%vals(pidx)%OBS = 1
+         stk_top = stk_top + 1
+         anc_stack(stk_top) = pidx
+       end if
+     end if
+   end do
+
+   deallocate(anc_stack)
+ end if
+
+ if (ref_ok) then
+   NA = 0
+   do i = 0, h%n_buckets-1
+     if (h%valid_index(i)) then
+       if (h%vals(i)%OBS > 0) NA = NA + 1
+     end if
+   end do
+   NREC = NA
+ else
+   NREC = h%n_keys_stored
+ end if
  
  allocate(REF(NREC),order(NREC))
 
@@ -159,6 +211,9 @@ module renPED
  missBYR=.false.
  do i = 0, h%n_buckets-1
     if(h%valid_index(i)) then
+      if (ref_ok) then
+        if (h%vals(i)%OBS <= 0) cycle
+      endif
       NA=NA+1
       REF(NA)%ID=h%vals(i)%ASD(1)
       if(len_trim(REF(NA)%ID) > strlen) strlen=len_trim(REF(NA)%ID)

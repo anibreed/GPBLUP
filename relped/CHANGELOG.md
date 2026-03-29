@@ -1,4 +1,4 @@
-# Changelog — pedrel
+# Changelog — relped
 
 ## 2026-03-26
 - chore: Removed Colleau debug-target API and diagnostic prints from `colleau_mod.f90`.

@@ -38,6 +38,7 @@ program relped
  subroutine read_parameter(paramfile)
  character(len=*),intent(in):: paramfile
  character(len=MAX_STR):: XC(MAX_VAR)
+ character(len=MAX_STR):: KEY
  integer:: X(MAX_VAR), n, unt
 
  unt=fopen(paramfile,MAX_RECL)
@@ -45,7 +46,8 @@ program relped
         call readline(unt,n,XC,X)
         if(n<= -1) exit
         XC(1)=upper(XC(1))
-        select case(XC(1)(1:8))
+        KEY=trim(adjustl(XC(1)))
+        select case(KEY)
                  case("PEDFILE:")
                      PEDFile=XC(2)
                      print*,"Pedigree file=  ", trim(PEDFile)
@@ -57,18 +59,18 @@ program relped
                          PEDinfo(1:n-1)=X(2:n)
                          print*,"Column info on pedigree file(ARN, SRN, DRN, BYR, SEX)=",PEDinfo
                      endif
-                 case("REFFILE:")
+                 case("DATAFILE:","REFFILE:")
                      REFFile=XC(2)
                      reference=.true.
-                     print*,"Reference file name for renumbering=  ",trim(REFFile)
-                 case("REFINFO:")
+                     print*,"Data file name for renumbering=  ",trim(REFFile)
+                 case("DATAINFO:","REFINFO:")
                      if(n<3) then
-                         print*,"Reference file information was not enough"
+                         print*,"Data file information was not enough"
                          stop
                      else
                          REFinfo(1)=X(2)  ! Column no. for Animal ID
                          REFinfo(2)=X(3)  ! Column no. for Animal Sex(1=Female, 2=Make)
-                         print*,"Column infos for animal ID and Sex on reference file=",REFinfo
+                         print*,"Column infos for animal ID and Sex on data file=",REFinfo
 
                      endif
                  case("INBREED:")

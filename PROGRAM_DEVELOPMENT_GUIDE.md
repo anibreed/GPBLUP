@@ -316,7 +316,7 @@ make              # 자동으로 NewProgram만 재컴파일
 
 ```bash
 # M_Variables.f90 수정
-vim source/M_Variables.f90
+vim src/M_Variables.f90
 
 # 빌드 (모든 프로그램 자동 재컴파일)
 make

@@ -211,7 +211,7 @@ $$Rel = \frac{\sigma_{a_{est}}^2}{\sigma_a^2} = 1 - \frac{\sigma_e^2(Z'Z + \lamb
 
 Higher reliability indicates more precise EBV estimation
 
-### 2.3 Data Modules (source/)
+### 2.3 Data Modules (src/)
 
 10 core modules performing essential functions:
 

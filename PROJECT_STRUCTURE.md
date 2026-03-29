@@ -26,7 +26,7 @@ This document describes the organized structure of the GPBLUP project with empha
 │       ├── *.o                  # Compiled module objects
 │       └── *.mod                # Compiled module interfaces
 │
-├── source/                       # Shared module source code
+├── src/                       # Shared module source code
 │   ├── M_Kinds.f90              # Data type definitions
 │   ├── M_Stamp.f90              # Version/timestamp utilities
 │   ├── M_Variables.f90          # Global variables
@@ -39,8 +39,7 @@ This document describes the organized structure of the GPBLUP project with empha
 │   └── Qsort4.f90               # Sorting utilities
 │
 ├── popQC/                        # Population QC program directory
-│   ├── src/
-│   │   └── popQC.f90            # Main program source (1605 lines)
+│   ├── popQC.f90                # Main program source (1605 lines)
 │   ├── docs/
 │   │   ├── POPQC_SPECIFICATION.md      # Technical specification
 │   │   ├── POPQC_SPECIFICATION.pdf     # PDF manual (English)
@@ -50,8 +49,7 @@ This document describes the organized structure of the GPBLUP project with empha
 │   └── test/                    # Test data and results
 │
 ├── ReadFR/                       # Genotype reading program directory
-│   ├── src/
-│   │   └── ReadFR.f90           # Main program source
+│   ├── ReadFR.f90               # Main program source
 │   ├── docs/
 │   │   └── [documentation]      # ReadFR documentation
 │   ├── parameter_example.txt    # Example parameter file
@@ -90,7 +88,7 @@ popQC.f90 depends on:
 
 ### popQC (Population Quality Control)
 
-**Location**: `/home/dhlee/GPBLUP/popQC/src/popQC.f90`
+**Location**: `/home/dhlee/GPBLUP/popQC/popQC.f90`
 **Size**: 1,605 lines
 **Compiled Size**: 115 KB
 **Purpose**: 9-step population-level quality control pipeline
@@ -132,7 +130,7 @@ popQC.f90 depends on:
 
 ### ReadFR (Genotype Data Integration)
 
-**Location**: `/home/dhlee/GPBLUP/ReadFR/src/ReadFR.f90`
+**Location**: `/home/dhlee/GPBLUP/ReadFR/ReadFR.f90`
 **Size**: ~800 lines (estimated)
 **Compiled Size**: 86 KB
 **Purpose**: Read and integrate genotype data from various formats
@@ -142,7 +140,7 @@ popQC.f90 depends on:
 ### Build Process Overview
 
 ```
-1. Source Setup (source/)
+1. Source Setup (src/)
    ├─ M_Kinds.f90 → build/common/M_Kinds.o
    └─ M_Stamp.f90 → build/common/M_Stamp.o
 
@@ -204,7 +202,7 @@ Final executables go to `/home/dhlee/GPBLUP/bin/` for unified access:
 ## File Organization Rules
 
 ### Source Files (.f90)
-- Location: `source/` (modules) or `popQC/src/`, `ReadFR/src/` (programs)
+- Location: `src/` (modules) or `popQC/`, `ReadFR/` (programs)
 - Naming: `M_` prefix for modules, program name for main files
 - No modifications after compilation (recompile if changed)
 
@@ -228,13 +226,13 @@ Final executables go to `/home/dhlee/GPBLUP/bin/` for unified access:
 ## Maintenance Tasks
 
 ### Adding a New Module
-1. Create `source/M_NewModule.f90`
+1. Create `src/M_NewModule.f90`
 2. Add to dependency chain in `Makefile`
 3. Update compiler flags if needed
 4. Recompile all dependent programs
 
 ### Updating a Program (.f90 file)
-1. Edit `popQC/src/popQC.f90` or `ReadFR/src/ReadFR.f90`
+1. Edit `popQC/popQC.f90` or `ReadFR/ReadFR.f90`
 2. Run `make clean-popQC` or `make clean-ReadFR`
 3. Run `make popQC` or `make ReadFR`
 4. Verify binary in `/home/dhlee/GPBLUP/bin/`

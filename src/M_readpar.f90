@@ -116,6 +116,9 @@ CONTAINS
       call split_string(line_buffer, XC, n, ' ')
       if (n > 0) then
         keyword_upper = to_upper(trim(adjustl(XC(1))))
+
+        ! Compatibility alias: REFFILE behaves as DATAFILE.
+        if (trim(keyword_upper) == 'REFFILE:') keyword_upper = 'DATAFILE:'
         
         do i = 1, 5
            if (trim(keyword_upper) == trim(NAMEKEY(i))) then

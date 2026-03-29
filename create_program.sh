@@ -252,11 +252,11 @@ See the template in `test/parameter_example.txt`
 
 ## Integration with GPBLUP
 This program is integrated into the unified GPBLUP project and uses:
-- Common source modules from `source/`
+- Common source modules from `src/`
 - Shared parameter parsing via M_readpar
 - Standard file formats (PED, MAP, GENO files)
 
-When modules in `source/` are modified, this program is automatically recompiled.
+When modules in `src/` are modified, this program is automatically recompiled.
 
 ## Development
 1. Modify `PROGRAM_PLACEHOLDER.f90`

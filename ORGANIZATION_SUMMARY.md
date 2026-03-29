@@ -13,7 +13,7 @@
    ```
    **Purpose**: Centralized build artifacts, keeps source clean
 
-2. **Source Module Organization** (`/home/dhlee/GPBLUP/source/`)
+2. **Source Module Organization** (`/home/dhlee/GPBLUP/src/`)
    - **M_Kinds.f90** - Data type precision definitions
    - **M_Stamp.f90** - Version and timestamp utilities  
    - **M_Variables.f90** - Global variable declarations
@@ -25,7 +25,7 @@
    - **M_StrEdit.f90** - String manipulation utilities
    - **Qsort4.f90** - Sorting algorithms
    
-   **All locations**: `/home/dhlee/GPBLUP/source/M_*.f90`
+   **All locations**: `/home/dhlee/GPBLUP/src/M_*.f90`
 
 3. **Executable Deployment** (`/home/dhlee/GPBLUP/bin/`)
    ```
@@ -67,7 +67,7 @@
 ```
 /home/dhlee/GPBLUP/
 │
-├── 📁 source/                    [SHARED MODULES - CLEAN]
+├── 📁 src/                    [SHARED MODULES - CLEAN]
 │   ├── M_Kinds.f90
 │   ├── M_Stamp.f90
 │   ├── M_Variables.f90
@@ -101,8 +101,7 @@
 │   └── libdkblupf90.so          (shared)
 │
 ├── 📁 popQC/                     [PROGRAM UNIT - popQC]
-│   ├── src/
-│   │   └── popQC.f90           (1,605 lines - MAIN SOURCE)
+│   ├── popQC.f90               (1,605 lines - MAIN SOURCE)
 │   ├── docs/
 │   │   ├── POPQC_SPECIFICATION.md      (Technical spec, 100+ sections)
 │   │   ├── POPQC_SPECIFICATION.pdf     (English manual, 88 KB)
@@ -114,8 +113,7 @@
 │       └── README.md
 │
 ├── 📁 ReadFR/                    [PROGRAM UNIT - ReadFR]
-│   ├── src/
-│   │   └── ReadFR.f90          (Main source)
+│   ├── ReadFR.f90              (Main source)
 │   ├── docs/
 │   │   ├── README.md
 │   │   └── [other docs]
@@ -235,11 +233,11 @@ make -C /home/dhlee/GPBLUP distclean
 ### File Organization Rules
 
 **Do**:
-- ✅ Keep source code in `source/` and `*/src/`
+- ✅ Keep source code in `src/` and program files in `popQC/`, `ReadFR/`
 - ✅ Store build artifacts in `build/`
 - ✅ Place executables in `bin/`
 - ✅ Clean `build/` before archiving project
-- ✅ Commit `source/` to version control
+- ✅ Commit `src/` to version control
 - ✅ Ignore `build/` and `bin/` in .gitignore
 
 **Don't**:
@@ -257,7 +255,7 @@ make -C /home/dhlee/GPBLUP distclean
 
 ```bash
 # Verify source modules exist
-ls -la /home/dhlee/GPBLUP/source/M_*.f90
+ls -la /home/dhlee/GPBLUP/src/M_*.f90
 
 # Verify executables are in bin/
 ls -lh /home/dhlee/GPBLUP/bin/
@@ -284,9 +282,9 @@ find /home/dhlee/GPBLUP/popQC -name "*.o" -o -name "*.mod"  # Should find nothin
 
 | Directory | Contents | Size | Status |
 |-----------|----------|------|--------|
-| source/ | 10 module .f90 files | 150 KB | Permanent |
-| popQC/src | Main program | 50 KB | Permanent |
-| ReadFR/src | Main program | 40 KB | Permanent |
+| src/ | 10 module .f90 files | 150 KB | Permanent |
+| popQC/ | Main program | 50 KB | Permanent |
+| ReadFR/ | Main program | 40 KB | Permanent |
 | build/ | Compilation artifacts | 10 MB | Temporary (can clean) |
 | bin/ | Executables | 200 KB | Permanent |
 | lib/ | Libraries | 500 KB | Optional |
@@ -326,9 +324,9 @@ temp/
 ### What to Commit
 
 ```
-✅ source/M_*.f90         (all modules)
-✅ popQC/src/popQC.f90    (main programs)
-✅ ReadFR/src/ReadFR.f90
+✅ src/M_*.f90         (all modules)
+✅ popQC/popQC.f90    (main programs)
+✅ ReadFR/ReadFR.f90
 ✅ *.md                   (documentation)
 ✅ CMakeLists.txt         (build config)
 ✅ Makefile               (build config)

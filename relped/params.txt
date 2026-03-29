@@ -1,14 +1,14 @@
 # Sample parameter file for relped
 # Lines starting with '#' are ignored.
 
-PEDFILE: test_ped.txt
+PEDFILE: PED_YY.txt
 # PEDINFO: columns for (ARN SRN DRN BYR SEX)
-PEDINFO: 1 2 3 4 5
+PEDINFO: 2 4 5 0 7
 
 # Optional reference file for renumbering
-REFFILE: test_ref.txt
-# REFINFO: columns for (AnimalID Sex)
-REFINFO: 1 2
+DATAFILE: Geno_animal.txt
+# DATAINFO: columns for (AnimalID Sex)
+DATAINFO: 1 2
 
 # Calculate inbreeding? 0 = No, 1 = Yes
 INBREED: 1

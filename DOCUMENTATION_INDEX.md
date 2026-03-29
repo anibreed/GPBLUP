@@ -132,12 +132,11 @@
 ├── ORGANIZATION_SUMMARY.md          ← What was reorganized
 ├── DOCUMENTATION_INDEX.md           ← This file
 │
-├── source/                          ← Shared modules (10 files)
+├── src/                          ← Shared modules (10 files)
 │   └── M_*.f90, Qsort4.f90
 │
 ├── popQC/                           ← Main program
-│   ├── src/
-│   │   └── popQC.f90               (1,605 lines)
+│   ├── popQC.f90                    (1,605 lines)
 │   ├── docs/
 │   │   ├── POPQC_SPECIFICATION.md   ← Algorithm details
 │   │   ├── POPQC_SPECIFICATION.pdf
@@ -146,8 +145,7 @@
 │   └── parameter_example.txt        ← Config template
 │
 ├── ReadFR/                          ← Secondary program
-│   ├── src/
-│   │   └── ReadFR.f90
+│   ├── ReadFR.f90
 │   └── [docs, configs]
 │
 ├── build/                           ← Build artifacts (temporary)
@@ -210,8 +208,8 @@ gdb ./bin/popQC parameter_file.txt
 ### Rebuild After Code Change
 
 ```bash
-# Edit source (e.g., popQC/src/popQC.f90)
-vi popQC/src/popQC.f90
+# Edit source (e.g., popQC/popQC.f90)
+vi popQC/popQC.f90
 
 # Clean and rebuild
 make clean

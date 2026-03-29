@@ -39,7 +39,7 @@ The main executable that processes Illumina GenomeStudio FinalReport files with 
 Production-grade Fortran modules for genomic data processing:
 
 ```
-source/
+src/
 ├── M_HashTable.f90        # Generic hash table (O(1) lookup)
 ├── M_PEDHashTable.f90     # Pedigree hash table
 ├── M_Variables.f90        # Shared data types
@@ -150,7 +150,7 @@ Complete documentation is available:
 
 ```
 GPBLUP/
-├── source/                 # Fortran source modules
+├── src/                 # Fortran source modules
 │   ├── M_*.f90            # Core library modules
 │   └── Qsort4.f90         # Sorting algorithms
 ├── ReadFR/                # Main QC program
