@@ -15,4 +15,8 @@ INBREED: 1
 
 # Calculate relationship matrix A? 0 = No, 1 = Yes
 RELATION: 1
+
+# Calculate inverse relationship matrix A^-1? 0 = No, 1 = Yes
+RELATION_INV: 0
+
 OMP_THREADS: 32

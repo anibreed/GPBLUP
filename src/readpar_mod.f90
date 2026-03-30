@@ -10,6 +10,7 @@ module readpar_mod
     integer :: refinfo(2) = 0
     integer :: inbreed = 0
     integer :: relation = 0
+    integer :: relation_inv = 0
     integer :: omp_threads = 32
     logical :: has_reference = .false.
   end type relped_params_t
@@ -105,6 +106,18 @@ contains
           stop
         end if
         write(*,*) 'Calculating A matrix (No=0, Yes=1)', params%relation
+
+      case ('RELATION_INV', 'RELATION_INV:', 'AINV', 'AINV:')
+        if (ntok < 2) then
+          write(*,*) 'Information for calculating A inverse matrix was not enough'
+          stop
+        end if
+        params%relation_inv = to_int(tokens(2))
+        if (params%relation_inv < 0 .or. params%relation_inv > 1) then
+          write(*,*) 'Information for calculating A inverse matrix should be 0 or 1', params%relation_inv
+          stop
+        end if
+        write(*,*) 'Calculating A inverse matrix (No=0, Yes=1)', params%relation_inv
 
       case ('OMP_THREADS', 'OMP_THREADS:')
         if (ntok < 2) then

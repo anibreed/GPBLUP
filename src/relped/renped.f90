@@ -10,12 +10,12 @@ module renPED
 
   contains
 
-  subroutine renumped(PEDFile, PEDinfo, REFFile, REFinfo, inb, rel, use_gpu, device_id, omp_threads_in)
+  subroutine renumped(PEDFile, PEDinfo, REFFile, REFinfo, inb, rel, rel_inv, use_gpu, device_id, omp_threads_in)
   character(LEN=*),intent(in):: PEDFile
   integer,intent(in):: PEDinfo(:)
   character(LEN=*),intent(in),optional:: REFFile
   integer,intent(in),optional:: REFinfo(:)
-  integer,intent(in),optional:: inb, rel
+  integer,intent(in),optional:: inb, rel, rel_inv
   logical, intent(in), optional :: use_gpu
   integer, intent(in), optional :: device_id
   integer, intent(in), optional :: omp_threads_in
@@ -27,7 +27,8 @@ module renPED
   character(LEN=LEN_STR),allocatable:: REFAnim(:)
   character(LEN=LEN_STR):: SV(MAX_VAR), string
   character(LEN=MAX_STR):: ofile, ofmt
-  logical:: missBYR, inb_cal=.false., rel_cal=.false.
+  logical:: missBYR, inb_cal=.false., rel_cal=.false., relinv_cal=.false.
+  logical :: need_F
   logical :: ref_ok
   integer:: IV(MAX_VAR), strlen, ianim
   integer(kind=ki4) :: NREC, NRECTot, unt, NA, n, i, j, ii, ix, jx, ios, stats(3), status
@@ -67,7 +68,11 @@ module renPED
   endif
   if(present(rel)) then
   if(rel == 1) rel_cal=.true.
-  endif  
+  endif
+  if(present(rel_inv)) then
+  if(rel_inv == 1) relinv_cal=.true.
+  endif
+  need_F = inb_cal .or. rel_cal .or. relinv_cal
   omp_nprocs = omp_get_num_procs()
   omp_threads = min(32, omp_nprocs)
   if (present(omp_threads_in)) omp_threads = omp_threads_in
@@ -245,7 +250,7 @@ module renPED
     endif
  enddo
 
- if(inb_cal) then
+ if(need_F) then
   ! Use Colleau inbreeding routine for efficiency and optional triplet output
   allocate(F(NREC))
   allocate(sire_arr(NREC))
@@ -333,6 +338,11 @@ module renPED
     write(*,*) '>>> renumped: writing triplets A_triplets.txt'
     call write_triplets(NREC, sire_arr, dam_arr, F, 'A_triplets.txt')
     write(*,*) '<<< renumped: triplets written'
+  endif
+  if (relinv_cal) then
+    write(*,*) '>>> renumped: writing inverse triplets Ainv_triplets.txt'
+    call write_ainv_triplets(NREC, sire_arr, dam_arr, F, 'Ainv_triplets.txt')
+    write(*,*) '<<< renumped: inverse triplets written'
   endif
   write(*,*) '<<< renumped: returned from compute_inbreeding'
   call timestamp()

@@ -348,6 +348,185 @@ contains
     deallocate(x, y)
   end subroutine write_triplets
 
+  subroutine write_ainv_triplets(n, sire, dam, F, filename)
+    implicit none
+    integer(kind=ki4), intent(in) :: n
+    integer(kind=ki4), intent(in) :: sire(n), dam(n)
+    real(kind=r8), intent(in) :: F(n)
+    character(len=*), intent(in) :: filename
+
+    integer(kind=ki4) :: i, s, d, unit, ios
+    integer(kind=ki4) :: nt, max_terms
+    integer(kind=ki4), allocatable :: rows(:), cols(:)
+    integer(kind=ki8), allocatable :: keys(:)
+    real(kind=r8), allocatable :: vals(:)
+    real(kind=r8) :: di, bi
+    real(kind=r8) :: v_acc
+    integer(kind=ki8) :: key_acc
+    integer(kind=ki4) :: row_acc, col_acc
+
+    max_terms = 8 * n + 16
+    allocate(rows(max_terms), cols(max_terms), vals(max_terms))
+    nt = 0
+
+    do i = 1, n
+      s = sire(i)
+      d = dam(i)
+
+      if (s > 0 .and. d > 0) then
+        di = 0.5_r8 - 0.25_r8 * (F(s) + F(d))
+      else if (s > 0 .or. d > 0) then
+        if (s > 0) then
+          di = 0.75_r8 - 0.25_r8 * F(s)
+        else
+          di = 0.75_r8 - 0.25_r8 * F(d)
+        end if
+      else
+        di = 1.0_r8
+      end if
+
+      if (di <= 1.0d-14) cycle
+      bi = 1.0_r8 / di
+
+      call add_lower_term(i, i, 1.0_r8 * bi, rows, cols, vals, nt, max_terms)
+
+      if (s > 0) then
+        call add_lower_term(i, s, -0.5_r8 * bi, rows, cols, vals, nt, max_terms)
+        call add_lower_term(s, s,  0.25_r8 * bi, rows, cols, vals, nt, max_terms)
+      end if
+      if (d > 0) then
+        call add_lower_term(i, d, -0.5_r8 * bi, rows, cols, vals, nt, max_terms)
+        call add_lower_term(d, d,  0.25_r8 * bi, rows, cols, vals, nt, max_terms)
+      end if
+      if (s > 0 .and. d > 0) then
+        call add_lower_term(s, d, 0.25_r8 * bi, rows, cols, vals, nt, max_terms)
+      end if
+    end do
+
+    if (nt <= 0) then
+      open(newunit=unit, file=filename, status='replace', action='write', iostat=ios)
+      if (ios == 0) close(unit)
+      deallocate(rows, cols, vals)
+      return
+    end if
+
+    allocate(keys(nt))
+    do i = 1, nt
+      keys(i) = int(rows(i), kind=ki8) * int(n + 1, kind=ki8) + int(cols(i), kind=ki8)
+    end do
+    call sort_key_values(keys, vals, nt)
+
+    open(newunit=unit, file=filename, status='replace', action='write', iostat=ios)
+    if (ios /= 0) then
+      write(*,*) 'Cannot open inverse triplet file:', trim(filename)
+      deallocate(rows, cols, vals, keys)
+      return
+    end if
+
+    key_acc = keys(1)
+    v_acc = vals(1)
+    do i = 2, nt
+      if (keys(i) == key_acc) then
+        v_acc = v_acc + vals(i)
+      else
+        if (abs(v_acc) > 1.0d-16) then
+          row_acc = int(key_acc / int(n + 1, kind=ki8), kind=ki4)
+          col_acc = int(mod(key_acc, int(n + 1, kind=ki8)), kind=ki4)
+          if (row_acc >= 1 .and. col_acc >= 1) then
+            write(unit,'(I8,1x,I8,1x,ES16.8)') row_acc, col_acc, v_acc
+          end if
+        end if
+        key_acc = keys(i)
+        v_acc = vals(i)
+      end if
+    end do
+
+    if (abs(v_acc) > 1.0d-16) then
+      row_acc = int(key_acc / int(n + 1, kind=ki8), kind=ki4)
+      col_acc = int(mod(key_acc, int(n + 1, kind=ki8)), kind=ki4)
+      if (row_acc >= 1 .and. col_acc >= 1) then
+        write(unit,'(I8,1x,I8,1x,ES16.8)') row_acc, col_acc, v_acc
+      end if
+    end if
+
+    close(unit)
+    deallocate(rows, cols, vals, keys)
+  end subroutine write_ainv_triplets
+
+  subroutine add_lower_term(i, j, v, rows, cols, vals, nt, max_terms)
+    implicit none
+    integer(kind=ki4), intent(in) :: i, j, max_terms
+    real(kind=r8), intent(in) :: v
+    integer(kind=ki4), intent(inout) :: nt
+    integer(kind=ki4), intent(inout) :: rows(:), cols(:)
+    real(kind=r8), intent(inout) :: vals(:)
+    integer(kind=ki4) :: r, c
+
+    if (i <= 0 .or. j <= 0) return
+    if (abs(v) <= 1.0d-20) return
+
+    r = i
+    c = j
+    if (r < c) then
+      r = j
+      c = i
+    end if
+
+    nt = nt + 1
+    if (nt > max_terms) stop 'write_ainv_triplets: term buffer overflow'
+    rows(nt) = r
+    cols(nt) = c
+    vals(nt) = v
+  end subroutine add_lower_term
+
+  subroutine sort_key_values(keys, vals, n)
+    implicit none
+    integer(kind=ki8), intent(inout) :: keys(:)
+    real(kind=r8), intent(inout) :: vals(:)
+    integer(kind=ki4), intent(in) :: n
+    if (n <= 1) return
+    call quicksort_key_values(keys, vals, 1_ki4, n)
+  end subroutine sort_key_values
+
+  recursive subroutine quicksort_key_values(keys, vals, lo, hi)
+    implicit none
+    integer(kind=ki8), intent(inout) :: keys(:)
+    real(kind=r8), intent(inout) :: vals(:)
+    integer(kind=ki4), intent(in) :: lo, hi
+    integer(kind=ki4) :: i, j
+    integer(kind=ki8) :: pivot, tkey
+    real(kind=r8) :: tval
+
+    i = lo
+    j = hi
+    pivot = keys((lo + hi) / 2)
+
+    do
+      do while (keys(i) < pivot)
+        i = i + 1
+      end do
+      do while (keys(j) > pivot)
+        j = j - 1
+      end do
+
+      if (i <= j) then
+        tkey = keys(i)
+        keys(i) = keys(j)
+        keys(j) = tkey
+        tval = vals(i)
+        vals(i) = vals(j)
+        vals(j) = tval
+        i = i + 1
+        j = j - 1
+      end if
+
+      if (i > j) exit
+    end do
+
+    if (lo < j) call quicksort_key_values(keys, vals, lo, j)
+    if (i < hi) call quicksort_key_values(keys, vals, i, hi)
+  end subroutine quicksort_key_values
+
   ! ------------------------------------------------------------------
   ! Exact tabular inbreeding + A-matrix builder (fallback)
   ! Computes full A (dense) by recursion and returns F.
