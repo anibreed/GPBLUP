@@ -11,6 +11,8 @@ module readpar_mod
     integer :: inbreed = 0
     integer :: relation = 0
     integer :: relation_inv = 0
+    character(len=RP_STR) :: relation_file = 'A_triplets.txt'
+    character(len=RP_STR) :: relation_inv_file = 'Ainv_triplets.txt'
     integer :: omp_threads = 32
     logical :: has_reference = .false.
   end type relped_params_t
@@ -107,6 +109,14 @@ contains
         end if
         write(*,*) 'Calculating A matrix (No=0, Yes=1)', params%relation
 
+      case ('RELATION_FILE', 'RELATION_FILE:')
+        if (ntok < 2) then
+          write(*,*) 'Information for A matrix output file was not enough'
+          stop
+        end if
+        params%relation_file = tokens(2)
+        write(*,*) 'A matrix triplet output file=', trim(params%relation_file)
+
       case ('RELATION_INV', 'RELATION_INV:', 'AINV', 'AINV:')
         if (ntok < 2) then
           write(*,*) 'Information for calculating A inverse matrix was not enough'
@@ -118,6 +128,14 @@ contains
           stop
         end if
         write(*,*) 'Calculating A inverse matrix (No=0, Yes=1)', params%relation_inv
+
+      case ('RELATION_INV_FILE', 'RELATION_INV_FILE:', 'AINV_FILE', 'AINV_FILE:')
+        if (ntok < 2) then
+          write(*,*) 'Information for A inverse matrix output file was not enough'
+          stop
+        end if
+        params%relation_inv_file = tokens(2)
+        write(*,*) 'A inverse matrix triplet output file=', trim(params%relation_inv_file)
 
       case ('OMP_THREADS', 'OMP_THREADS:')
         if (ntok < 2) then

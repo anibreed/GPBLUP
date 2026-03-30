@@ -19,11 +19,11 @@ program relped
 
  if(params%has_reference) then
      if(params%refinfo(1) /= 0) then
-         call renumped(PEDFile=params%pedfile, PEDinfo=params%pedinfo, REFFile=params%reffile, REFinfo=params%refinfo, inb=params%inbreed, rel=params%relation, rel_inv=params%relation_inv, use_gpu=use_gpu, device_id=device_id, omp_threads_in=params%omp_threads)
+         call renumped(PEDFile=params%pedfile, PEDinfo=params%pedinfo, REFFile=params%reffile, REFinfo=params%refinfo, inb=params%inbreed, rel=params%relation, rel_inv=params%relation_inv, rel_outfile=params%relation_file, relinv_outfile=params%relation_inv_file, use_gpu=use_gpu, device_id=device_id, omp_threads_in=params%omp_threads)
      else
-         call renumped(PEDFile=params%pedfile, PEDinfo=params%pedinfo, REFFile=params%reffile, inb=params%inbreed, rel=params%relation, rel_inv=params%relation_inv, use_gpu=use_gpu, device_id=device_id, omp_threads_in=params%omp_threads)
+         call renumped(PEDFile=params%pedfile, PEDinfo=params%pedinfo, REFFile=params%reffile, inb=params%inbreed, rel=params%relation, rel_inv=params%relation_inv, rel_outfile=params%relation_file, relinv_outfile=params%relation_inv_file, use_gpu=use_gpu, device_id=device_id, omp_threads_in=params%omp_threads)
      endif
  else
-     call renumped(PEDFile=params%pedfile, PEDinfo=params%pedinfo, inb=params%inbreed, rel=params%relation, rel_inv=params%relation_inv, use_gpu=use_gpu, device_id=device_id, omp_threads_in=params%omp_threads)
+     call renumped(PEDFile=params%pedfile, PEDinfo=params%pedinfo, inb=params%inbreed, rel=params%relation, rel_inv=params%relation_inv, rel_outfile=params%relation_file, relinv_outfile=params%relation_inv_file, use_gpu=use_gpu, device_id=device_id, omp_threads_in=params%omp_threads)
  endif
  end program

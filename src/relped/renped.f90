@@ -10,10 +10,11 @@ module renPED
 
   contains
 
-  subroutine renumped(PEDFile, PEDinfo, REFFile, REFinfo, inb, rel, rel_inv, use_gpu, device_id, omp_threads_in)
+  subroutine renumped(PEDFile, PEDinfo, REFFile, REFinfo, inb, rel, rel_inv, rel_outfile, relinv_outfile, use_gpu, device_id, omp_threads_in)
   character(LEN=*),intent(in):: PEDFile
   integer,intent(in):: PEDinfo(:)
   character(LEN=*),intent(in),optional:: REFFile
+  character(LEN=*),intent(in),optional:: rel_outfile, relinv_outfile
   integer,intent(in),optional:: REFinfo(:)
   integer,intent(in),optional:: inb, rel, rel_inv
   logical, intent(in), optional :: use_gpu
@@ -26,7 +27,7 @@ module renPED
   real(kind=r8), allocatable :: F_tab(:)
   character(LEN=LEN_STR),allocatable:: REFAnim(:)
   character(LEN=LEN_STR):: SV(MAX_VAR), string
-  character(LEN=MAX_STR):: ofile, ofmt
+  character(LEN=MAX_STR):: ofile, ofmt, rel_file, relinv_file
   logical:: missBYR, inb_cal=.false., rel_cal=.false., relinv_cal=.false.
   logical :: need_F
   logical :: ref_ok
@@ -72,6 +73,14 @@ module renPED
   if(present(rel_inv)) then
   if(rel_inv == 1) relinv_cal=.true.
   endif
+  rel_file = 'A_triplets.txt'
+  relinv_file = 'Ainv_triplets.txt'
+  if (present(rel_outfile)) then
+    if (len_trim(rel_outfile) > 0) rel_file = trim(rel_outfile)
+  end if
+  if (present(relinv_outfile)) then
+    if (len_trim(relinv_outfile) > 0) relinv_file = trim(relinv_outfile)
+  end if
   need_F = inb_cal .or. rel_cal .or. relinv_cal
   omp_nprocs = omp_get_num_procs()
   omp_threads = min(32, omp_nprocs)
@@ -335,13 +344,13 @@ module renPED
   write(*,'(A,1X,ES16.8)') 'max F=', maxF
   write(*,'(A,1X,ES16.8)') 'sum F=', sumF
   if (rel_cal) then
-    write(*,*) '>>> renumped: writing triplets A_triplets.txt'
-    call write_triplets(NREC, sire_arr, dam_arr, F, 'A_triplets.txt')
+    write(*,*) '>>> renumped: writing triplets ', trim(rel_file)
+    call write_triplets(NREC, sire_arr, dam_arr, F, trim(rel_file))
     write(*,*) '<<< renumped: triplets written'
   endif
   if (relinv_cal) then
-    write(*,*) '>>> renumped: writing inverse triplets Ainv_triplets.txt'
-    call write_ainv_triplets(NREC, sire_arr, dam_arr, F, 'Ainv_triplets.txt')
+    write(*,*) '>>> renumped: writing inverse triplets ', trim(relinv_file)
+    call write_ainv_triplets(NREC, sire_arr, dam_arr, F, trim(relinv_file))
     write(*,*) '<<< renumped: inverse triplets written'
   endif
   write(*,*) '<<< renumped: returned from compute_inbreeding'
