@@ -88,3 +88,14 @@ __pycache__/
 test_output*.txt
 test_*.geno
 GENO_*.geno
+
+# Local benchmark/data artifacts (not source-controlled)
+/A_triplets.txt
+/GENO_210624*.txt
+/POPQC_GENO_cleaned.txt
+/popQC/parameter_popqc_abs.txt
+/relped/relped_test
+/relped/test_params_omp*.txt
+/test_ped.txt
+/test_ref.txt
+/test_ref.txt_ren
