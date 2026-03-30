@@ -7,6 +7,7 @@ module M_Hashtable
   
   public :: htab_get_prime_size
   public :: htab_hash_string
+  public :: htab_hash_int
   
 contains
 
@@ -57,5 +58,28 @@ contains
     end do
     hash_val = int(abs(hash_i8))
   end function htab_hash_string
+
+  !**********************************************************************
+  ! 공통 정수 해시 함수
+  !**********************************************************************
+  integer function htab_hash_int(key, table_size) result(hash_val)
+    integer, intent(in) :: key
+    integer, intent(in) :: table_size
+    integer(kind=ki8) :: x
+
+    if (table_size <= 0) then
+      hash_val = 0
+      return
+    end if
+
+    x = int(key, ki8)
+    x = ieor(x, ishft(x, -16))
+    x = x * 2246822519_ki8
+    x = ieor(x, ishft(x, -13))
+    x = x * 3266489917_ki8
+    x = ieor(x, ishft(x, -16))
+
+    hash_val = int(mod(abs(x), int(table_size, ki8)))
+  end function htab_hash_int
 
 end module M_Hashtable

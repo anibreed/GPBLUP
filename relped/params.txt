@@ -15,3 +15,4 @@ INBREED: 1
 
 # Calculate relationship matrix A? 0 = No, 1 = Yes
 RELATION: 1
+OMP_THREADS: 32

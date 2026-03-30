@@ -10,7 +10,7 @@ module renPED
 
   contains
 
-  subroutine renumped(PEDFile, PEDinfo, REFFile, REFinfo, inb, rel, use_gpu, device_id)
+  subroutine renumped(PEDFile, PEDinfo, REFFile, REFinfo, inb, rel, use_gpu, device_id, omp_threads_in)
   character(LEN=*),intent(in):: PEDFile
   integer,intent(in):: PEDinfo(:)
   character(LEN=*),intent(in),optional:: REFFile
@@ -18,6 +18,7 @@ module renPED
   integer,intent(in),optional:: inb, rel
   logical, intent(in), optional :: use_gpu
   integer, intent(in), optional :: device_id
+  integer, intent(in), optional :: omp_threads_in
   type(CPED):: NX(3), OX(3)
   type(VPED),allocatable:: REF(:)
   integer,allocatable:: order(:),NPED(:,:)
@@ -45,13 +46,13 @@ module renPED
   integer :: omp_nprocs, omp_threads
   integer :: cnt_gt1e6, cnt_gt1e8, cnt_gt1e12
   real(kind=r8) :: minpos, maxF, sumF
+  logical, parameter :: perf_log = .false.
       integer :: outunit, l
       character(len=128) :: fname
       character(len=32) :: itmp, jtmp
       integer :: ns_nonzero, nd_nonzero, common_count
       real(kind=r8) :: sum_s, sum_d, min_s, max_s, min_d, max_d, sumprod
       type(CPED) :: tmpX
-      integer :: idx_lookup
 
   ref_ok = .false.
   if(present(REFFile)) then
@@ -67,6 +68,12 @@ module renPED
   if(present(rel)) then
   if(rel == 1) rel_cal=.true.
   endif  
+  omp_nprocs = omp_get_num_procs()
+  omp_threads = min(32, omp_nprocs)
+  if (present(omp_threads_in)) omp_threads = omp_threads_in
+  if (omp_threads < 1) omp_threads = 1
+  call omp_set_num_threads(omp_threads)
+
   NREC=N_recf(PEDFile, MAX_RECL)
   unt = fopen(PEDFile,MAX_RECL)
   strlen=0
@@ -133,6 +140,7 @@ module renPED
  endif
 
  print*,"After reading Refence File: Hash  size = ", h%hash_mask,"    Hash filled(No. of animal on PED) = ", h%n_keys_stored
+  call ped_build_index_cache(h)
       
  call trace_PED()
 
@@ -147,6 +155,7 @@ module renPED
    print*,"After tracing PED: Hash  size = ", h%hash_mask,"    Hash filled(No. of animal on PED) = ", h%n_keys_stored
  !    call sleep(10)
  endif
+   call ped_build_index_cache(h)
 
  ! Explicitly include REF animals and all their ancestors.
  if (ref_ok .and. allocated(REFAnim)) then
@@ -155,7 +164,7 @@ module renPED
 
    do k = 1, size(REFAnim)
      if (len_trim(REFAnim(k)) == 0) cycle
-     ref_idx = h%get_index(REFAnim(k))
+      ref_idx = ped_slot_from_key(REFAnim(k))
      if (ref_idx == -1) cycle
      if (h%vals(ref_idx)%OBS <= 0) then
        h%vals(ref_idx)%OBS = 1
@@ -169,7 +178,7 @@ module renPED
      stk_top = stk_top - 1
 
      if (h%vals(ref_idx)%ASD(2) /= missA) then
-       pidx = h%get_index(h%vals(ref_idx)%ASD(2))
+        pidx = ped_slot_from_key(h%vals(ref_idx)%ASD(2))
        if (pidx /= -1 .and. h%vals(pidx)%OBS <= 0) then
          h%vals(pidx)%OBS = 1
          stk_top = stk_top + 1
@@ -178,7 +187,7 @@ module renPED
      end if
 
      if (h%vals(ref_idx)%ASD(3) /= missA) then
-       pidx = h%get_index(h%vals(ref_idx)%ASD(3))
+        pidx = ped_slot_from_key(h%vals(ref_idx)%ASD(3))
        if (pidx /= -1 .and. h%vals(pidx)%OBS <= 0) then
          h%vals(pidx)%OBS = 1
          stk_top = stk_top + 1
@@ -190,17 +199,9 @@ module renPED
    deallocate(anc_stack)
  end if
 
- if (ref_ok) then
-   NA = 0
-   do i = 0, h%n_buckets-1
-     if (h%valid_index(i)) then
-       if (h%vals(i)%OBS > 0) NA = NA + 1
-     end if
-   end do
-   NREC = NA
- else
-   NREC = h%n_keys_stored
- end if
+  ! Use all surviving animals after trace/deletion.
+  ! The OBS-only filter can under-count reference-connected pedigrees.
+  NREC = h%n_keys_stored
  
  allocate(REF(NREC),order(NREC))
 
@@ -211,9 +212,6 @@ module renPED
  missBYR=.false.
  do i = 0, h%n_buckets-1
     if(h%valid_index(i)) then
-      if (ref_ok) then
-        if (h%vals(i)%OBS <= 0) cycle
-      endif
       NA=NA+1
       REF(NA)%ID=h%vals(i)%ASD(1)
       if(len_trim(REF(NA)%ID) > strlen) strlen=len_trim(REF(NA)%ID)
@@ -233,19 +231,14 @@ module renPED
   do i = 1, NREC
     REF(i)%ID = h%vals(order(i))%ASD(1)
   end do
+ write(*,'(A,I4,2X,A,I4)') 'OpenMP: using threads=', omp_threads, ' (procs=', omp_nprocs,')'
  do i=1,NREC
-    ix = h%get_index(h%vals(order(i))%ASD(2))
+    ix = ped_slot_from_key(h%vals(order(i))%ASD(2))
     if(ix /= -1) then
       ! Always map sire index if found (avoid leaving parent index as missing)
       h%vals(order(i))%NASD(2) = h%vals(ix)%NASD(1)
     endif
-
-  ! Configure OpenMP threads: use single thread for deterministic diagnostics
-  omp_nprocs = omp_get_num_procs()
-  omp_threads = 1
-  call omp_set_num_threads(omp_threads)
-  write(*,'(A,I4,2X,A,I4)') 'OpenMP: using threads=', omp_threads, ' (procs=', omp_nprocs,')'
-    ix = h%get_index(h%vals(order(i))%ASD(3))
+    ix = ped_slot_from_key(h%vals(order(i))%ASD(3))
     if(ix /= -1) then
       ! Always map dam index if found
       h%vals(order(i))%NASD(3) = h%vals(ix)%NASD(1)
@@ -278,19 +271,21 @@ module renPED
   ! Call the Colleau inbreeding implementation (compute_inbreeding)
   write(*,*) '>>> renumped: calling compute_inbreeding (colleau_mod)'
   call timestamp()
-  call set_colleau_verbose(.true.)
+  call set_colleau_verbose(.false.)
   ! Per-target diagnostics removed; proceed to compute inbreeding
   maxanc = min(NREC, MAXANC_LIMIT)
   ! Diagnostic: sample mapping of indices -> IDs and founder counts
-  do i = 1, min(50, NREC)
-    write(*,*) 'MAP index=', i, 'ID=', trim(REF(i)%ID)
-    if (sire_arr(i) /= 0) then
-      write(*,*) '  SIRE_IDX=', sire_arr(i), 'SIRE_ID=', trim(REF(sire_arr(i))%ID)
+    if (perf_log) then
+      do i = 1, min(50, NREC)
+        write(*,*) 'MAP index=', i, 'ID=', trim(REF(i)%ID)
+        if (sire_arr(i) /= 0) then
+          write(*,*) '  SIRE_IDX=', sire_arr(i), 'SIRE_ID=', trim(REF(sire_arr(i))%ID)
+        end if
+        if (dam_arr(i) /= 0) then
+          write(*,*) '  DAM_IDX=', dam_arr(i), 'DAM_ID=', trim(REF(dam_arr(i))%ID)
+        end if
+      end do
     end if
-    if (dam_arr(i) /= 0) then
-      write(*,*) '  DAM_IDX=', dam_arr(i), 'DAM_ID=', trim(REF(dam_arr(i))%ID)
-    end if
-  end do
   ! founder counts
   ii = 0
   do i = 1, NREC
@@ -303,9 +298,11 @@ module renPED
 
   ! Tabular fallback and comparison removed for production build
   ! quick check: print first few F values returned
-  do i = 1, min(10,NREC)
-    write(*,'(A,I6,2X,ES18.12)') 'SAMPLE F[', i, F(i)
-  end do
+    if (perf_log) then
+      do i = 1, min(10,NREC)
+        write(*,'(A,I6,2X,ES18.12)') 'SAMPLE F[', i, F(i)
+      end do
+    end if
   ! Print count of non-zero F entries
   ii = 0
   do i = 1, NREC
@@ -329,9 +326,9 @@ module renPED
   write(*,'(A,I8)') 'Count F>1e-6:', cnt_gt1e6
   write(*,'(A,I8)') 'Count F>1e-8:', cnt_gt1e8
   write(*,'(A,I8)') 'Count F>1e-12:', cnt_gt1e12
-  write(*,'(A,2X,A,ES16.8)') 'min positive F=', minpos
-  write(*,'(A,2X,A,ES16.8)') 'max F=', maxF
-  write(*,'(A,2X,A,ES16.8)') 'sum F=', sumF
+  write(*,'(A,1X,ES16.8)') 'min positive F=', minpos
+  write(*,'(A,1X,ES16.8)') 'max F=', maxF
+  write(*,'(A,1X,ES16.8)') 'sum F=', sumF
   if (rel_cal) then
     write(*,*) '>>> renumped: writing triplets A_triplets.txt'
     call write_triplets(NREC, sire_arr, dam_arr, F, 'A_triplets.txt')
@@ -343,15 +340,9 @@ module renPED
   ! Computed inbreeding F stored for each record (detailed output suppressed)
 
   ! store F (double precision) without scaling
-  do i = 1, NREC
-    ! Prefer current hash lookup index to ensure we write to the live slot
-    idx_lookup = h%get_index(trim(REF(i)%ID))
-    if (idx_lookup /= -1) then
-      h%vals(idx_lookup)%F = F(i)
-    else
+    do i = 1, NREC
       h%vals(order(i))%F = F(i)
-    end if
-  end do
+    end do
   
   deallocate(F, sire_arr, dam_arr)
 
@@ -449,13 +440,14 @@ endif
   check=0
 
   do i = 0, h%n_buckets-1
-    status = h%get_index(h%vals(i)%ASD(1))
+     status = ped_slot_from_key(h%vals(i)%ASD(1))
     if (status == -1) cycle
     valA = h%vals(status)
     if(valA%ASD(2) /= missA) then
-      call initX(valS)
-      call h%get_value(valA%ASD(2), valS,status)
-      if(status /= -1) then
+       call initX(valS)
+       status = ped_slot_from_key(valA%ASD(2))
+       if(status /= -1) then
+         valS = h%vals(status)
         if(valS%GEN <= valA%GEN) then
            valS%GEN = valA%GEN+1
            call h%ustore_value(valS%ASD(1), valS)
@@ -464,9 +456,10 @@ endif
       endif
     endif
     if(valA%ASD(3) /= missA) then
-      call initX(valD)
-      call h%get_value(valA%ASD(3), valD,status)
-      if(status /= -1) then
+       call initX(valD)
+       status = ped_slot_from_key(valA%ASD(3))
+       if(status /= -1) then
+         valD = h%vals(status)
         if(valD%GEN <= valA%GEN) then
            valD%GEN = valA%GEN+1
            call h%ustore_value(valD%ASD(1), valD)
@@ -519,7 +512,7 @@ recursive logical function check_ID(ARN,firstA) result(tangled)
    ARN0=ARN
    ngen=0
  elseif(ARN == ARN0) then
-   stepA = h%get_index(ARN)
+    stepA = ped_slot_from_key(ARN)
    if(stepA == -1) return
    print*," Animal Tangled!! delete Sire and Dam    ",h%vals(stepA)%ASD(:)
    h%vals(stepA)%ASD(2:3) = missA    !    call delete_stack(step)
@@ -527,7 +520,7 @@ recursive logical function check_ID(ARN,firstA) result(tangled)
    return
  endif
  ngen=ngen+1
- stepA = h%get_index(ARN)
+  stepA = ped_slot_from_key(ARN)
  if(stepA == -1) return
  if(h%vals(stepA)%ASD(2) /= missA) then
      tangled=check_ID(h%vals(stepA)%ASD(2))
