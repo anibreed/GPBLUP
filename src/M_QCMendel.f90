@@ -1,6 +1,7 @@
 module M_QCMendel
   use M_Kinds
-  use M_Variables, only: LEN_STR, PEDInfo
+  use M_Variables, only: LEN_STR
+  use M_ped, only: CPED
   use M_Hashtable
   use H_PedRead
   implicit none
@@ -43,7 +44,7 @@ contains
     character(len=24) :: animal_disp
     character(len=4) :: mode_disp
     character(len=20) :: reason_str
-    type(PEDInfo) :: ped_child
+    type(CPED) :: ped_child
     logical :: found_child
     character(len=LEN_STR), allocatable :: map_keys(:)
     integer,                allocatable :: map_rows(:)
@@ -401,7 +402,7 @@ contains
     integer :: n_valid, n_err, n_non_missing
     integer :: n_eval, n_del_now, n_keep
     real(r8) :: err_rate, cr_rate, del_thr
-    type(PEDInfo) :: ped_child
+    type(CPED) :: ped_child
     logical :: found_child
     character(len=LEN_STR), allocatable :: map_keys(:)
     integer, allocatable :: map_rows(:)

@@ -4,9 +4,10 @@
 
 ```bash
 cd /home/dhlee/GPBLUP
-make clean
-make all
-# Executables: /home/dhlee/GPBLUP/bin/popQC, /home/dhlee/GPBLUP/bin/ReadFR
+./install.sh
+# Executables installed to: ~/.local/bin (ReadFR, popQC, relped, relgeno)
+# or
+./install.sh /opt/gpblup
 ```
 
 ---
@@ -48,8 +49,10 @@ Tier 1: Shared Modules (src/)
        build/common/ (shared object files)
          ↓
 Tier 2: Unit Programs
-├─ popQC.f90            [Step 3a] + M_Kinds.o + M_Stamp.o → bin/popQC
-└─ ReadFR.f90           [Step 3b] + M_Kinds.o + M_Stamp.o → bin/ReadFR
+├─ popQC.f90            [Step 3a] + shared modules → bin/popQC
+├─ ReadFR.f90           [Step 3b] + shared modules → bin/ReadFR
+├─ relped.f90           [Step 3c] + shared modules → bin/relped
+└─ relgeno.f90          [Step 3d] + shared modules → bin/relgeno
 ```
 
 ### Compilation Sequence
@@ -113,6 +116,14 @@ gfortran -o ../../bin/ReadFR ReadFR.o ../common/M_Kinds.o ../common/M_Stamp.o
 make -C /home/dhlee/GPBLUP all
 ```
 Builds both popQC and ReadFR with all dependencies.
+
+#### One-batch Install (Recommended)
+```bash
+./install.sh
+# or
+./install.sh /opt/gpblup
+```
+Builds all programs (ReadFR, popQC, relped, relgeno) and installs to PREFIX/bin.
 
 #### Build popQC Only
 ```bash

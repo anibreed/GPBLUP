@@ -1,0 +1,10 @@
+# relgeno parameter file template (placeholders only)
+GENOFILE: /path/to/genotypes.txt
+OUT_G: /path/to/output/geno.G
+OUT_GINV: /path/to/output/geno.Gi
+OUT_GDIAG: /path/to/output/geno.Gdiag
+MISSING: 5
+WEIGHT: 0.95
+DIAG_WEIGHT: 0.05
+COMPUTE_G: TRUE
+COMPUTE_GINV: TRUE

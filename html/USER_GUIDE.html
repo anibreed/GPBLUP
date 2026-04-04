@@ -1,0 +1,33 @@
+<h1 id="gpblup-user-guide">GPBLUP User Guide</h1>
+<p>This guide covers the four main programs: ReadFR, popQC, relped, and relgeno.</p>
+<h2 id="common-notes">Common Notes</h2>
+<ul>
+<li>All executables are placed under <code>bin/</code> (or <code>PREFIX/bin</code> if installed).</li>
+<li>Input files are controlled by parameter files described below.</li>
+</ul>
+<h2 id="readfr">ReadFR</h2>
+<p>Purpose: QC and preprocessing for Illumina FinalReport files.</p>
+<p>Usage:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="ex">ReadFR</span> <span class="op">&lt;</span>parameter_file<span class="op">&gt;</span></span></code></pre></div>
+<p>Key inputs typically include: - FinalReport file - Pedigree file - Map file</p>
+<h2 id="popqc">popQC</h2>
+<p>Purpose: SNP/animal QC pipeline.</p>
+<p>Usage:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true"></a><span class="ex">popQC</span> <span class="op">&lt;</span>parameter_file<span class="op">&gt;</span></span></code></pre></div>
+<h2 id="relped">relped</h2>
+<p>Purpose: Pedigree renumbering and relationship matrices.</p>
+<p>Usage:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a><span class="ex">relped</span> <span class="op">&lt;</span>parameter_file<span class="op">&gt;</span></span></code></pre></div>
+<p>Outputs: - Renumbered pedigree file - A and Ainv matrices (binary and/or text based on settings)</p>
+<p>Notes: - Text triplet files include <code>row col value original_row_id original_col_id</code>. - Use <code>RELPED_TRIPLET_EPS</code> to skip tiny values in triplet outputs. - Set <code>RELPED_LOG</code> to enable a run log file.</p>
+<h2 id="relgeno">relgeno</h2>
+<p>Purpose: Genomic relationship matrix processing.</p>
+<p>Usage:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true"></a><span class="ex">relgeno</span> <span class="op">&lt;</span>parameter_file<span class="op">&gt;</span></span></code></pre></div>
+<h2 id="parameter-files">Parameter Files</h2>
+<p>Each program has its own parameter file format. See the example files in the project directories for exact field names and layouts.</p>
+<h2 id="output-locations">Output Locations</h2>
+<ul>
+<li>Default: output paths are controlled by parameter files.</li>
+<li>Binaries: <code>bin/</code> or <code>PREFIX/bin</code> if installed.</li>
+</ul>

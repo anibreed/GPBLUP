@@ -3,6 +3,72 @@
 ## Overview
 This document describes the organized structure of the GPBLUP project with emphasis on modular design, clear separation of concerns, and reproducible compilation workflow.
 
+## Proposed Restructuring (2026, Safe Migration Plan)
+This section is an additive, forward-looking plan. It does not change the current build or behavior. The goal is to provide a clean package structure while keeping existing programs working during the transition.
+
+### Target Layered Architecture
+- core: shared types, constants, string utilities, low-level file IO
+- config: parameter parsing and schema validation
+- io: file-format-specific readers and writers (PED, MAP, GENO, FR)
+- alg: common algorithms (sort/search, hash, sparse ops)
+- domain: biology and QC logic (pedigree, QC pipeline, matrices)
+- programs: thin entry points that call domain services
+
+### Current Files to Proposed Locations (Mapping Table)
+Core/Foundation
+- src/M_Kinds.f90 -> core/kinds.f90
+- src/M_Variables.f90 -> core/globals.f90
+- src/M_StrEdit.f90 -> core/strutil.f90
+- src/M_ReadFile.f90 -> core/fileio.f90
+- src/M_Stamp.f90 -> core/log_time.f90
+- src/M_param.f90 -> core/config_types.f90
+
+Config/Parameters
+- src/M_readpar.f90 -> config/param_reader.f90 (later split by program format)
+
+IO
+- src/H_PedRead.f90 -> io/io_ped.f90
+- src/H_MapRead.f90 -> io/io_map.f90
+- src/M_QCGenoIO.f90 -> io/io_geno.f90
+- ReadFR/ReadFR.f90 -> io/io_fr.f90 (only IO-related parts)
+
+Algorithms
+- src/M_Sort.f90 -> alg/sort.f90
+- src/M_hashsort.f90 -> alg/sparse_hash.f90
+- src/link_list.f90 -> alg/sparse_linklist.f90
+
+Domain/QC
+- src/M_QCSetup.f90 -> domain/qc_setup.f90
+- src/M_QCSNP.f90 -> domain/qc_snp.f90
+- src/M_QCSNPSelect.f90 -> domain/qc_snp_select.f90
+- src/M_QCSexCheck.f90 -> domain/qc_sex.f90
+- src/M_QCMendel.f90 -> domain/qc_mendel.f90
+- src/M_QCParentSeek.f90 -> domain/qc_parent_seek.f90
+- src/M_QCIDMerge.f90 -> domain/qc_id_merge.f90
+- src/M_QCIDMergePairEval.f90 -> domain/qc_id_merge_eval.f90
+- src/M_QCStepRunner.f90 -> domain/qc_pipeline.f90
+- src/M_HWEParam.f90 -> domain/qc_hwe.f90
+
+Domain/Pedigree and A-matrix
+- src/M_ped.f90 -> domain/ped.f90
+- src/renped.f90 -> domain/ped_ops.f90
+- src/colleau_mod.f90 -> domain/inbreeding.f90
+! read_amat.f90 removed (test-only)
+
+Sparse/Models
+- src/M_sparsemme.f90 -> solver/sparse_mme.f90 (or alg/sparse_ops.f90)
+
+Programs
+- ReadFR/ReadFR.f90 -> programs/readfr_main.f90 (after IO split)
+- popQC/popQC.f90 -> programs/popqc_main.f90
+- relped/relped.f90 -> programs/relped_main.f90
+
+### Migration Rules (Safety First)
+- Keep existing modules in place during the transition.
+- Add new modules with wrappers that preserve current interfaces.
+- Move one module at a time, then rebuild and test.
+- Only delete duplicates after successful replacement (e.g., Qsort4).
+
 ## Directory Hierarchy
 
 ```
@@ -36,7 +102,7 @@ This document describes the organized structure of the GPBLUP project with empha
 │   ├── M_HashTable.f90          # Hash table data structure
 │   ├── M_PEDHashTable.f90       # Pedigree-specific hash table
 │   ├── M_StrEdit.f90            # String editing utilities
-│   └── Qsort4.f90               # Sorting utilities
+│   └── M_Sort.f90               # Sorting utilities (unified)
 │
 ├── popQC/                        # Population QC program directory
 │   ├── popQC.f90                # Main program source (1605 lines)
@@ -77,7 +143,7 @@ M_param.f90 (parameter handling)
         ├─→ M_HashTable.f90
         └─→ M_PEDHashTable.f90
             └─→ M_StrEdit.f90
-                └─→ Qsort4.f90 (sorting)
+                └─→ M_Sort.f90 (sorting)
 
 popQC.f90 depends on:
     ├─→ M_Kinds

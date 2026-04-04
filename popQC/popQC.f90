@@ -11,14 +11,15 @@ program popQC_main
   use M_ReadPar
   use M_ReadFile
   use M_Hashtable
-  use H_PedRead
-  use H_MapRead
+  use M_IO_Ped
+  use M_IO_Map
   use M_StrEdit
   use M_QCStepRunner
   use M_QCSNP
   use M_QCSexCheck
-  use M_QCIDMerge, only: set_id_merge_context, merge_highly_identical_animals, finalize_deferred_identical_pairs
-  use M_QCGenoIO, only: load_geno_file_mod, write_valid_geno_for_imputation_mod, set_qcgenoio_debug_mod
+  use M_QCIDMerge, only: set_id_merge_context, merge_highly_identical_animals, &
+      finalize_deferred_identical_pairs, resolve_same_id_duplicates
+  use M_IO_Geno, only: load_geno_file_mod, write_valid_geno_for_imputation_mod, set_qcgenoio_debug_mod
   use M_QCSetup, only: setup_parameters_mod, resolve_animal_key_fields_mod, load_pedigree_info_mod, set_qcsetup_debug_mod
   use M_QCMendel, only: calculate_mendelian_inconsistency_mod, recheck_mendel_after_parent_seek_mod
   use M_QCParentSeek, only: set_parent_seek_context, identify_correct_parentage_mod
@@ -159,6 +160,22 @@ program popQC_main
   ! (PEDFile, MAPFile, GENOFile with FieldName and FieldLoc)
   call setup_parameters_mod(trim(Par_File))
   call resolve_animal_key_fields_mod(ped_animal_key_field, geno_animal_key_field)
+
+  inquire(file=trim(PEDFile%FileName), exist=file_exists)
+  if (.not. file_exists) then
+    print *, "ERROR: PED file not found: ", trim(PEDFile%FileName)
+    stop
+  end if
+  inquire(file=trim(MAPFile%FileName), exist=file_exists)
+  if (.not. file_exists) then
+    print *, "ERROR: MAP file not found: ", trim(MAPFile%FileName)
+    stop
+  end if
+  inquire(file=trim(GENOFile%FileName), exist=file_exists)
+  if (.not. file_exists) then
+    print *, "ERROR: GENO file not found: ", trim(GENOFile%FileName)
+    stop
+  end if
   
   ! Step 2: Load pedigree information into HashTable
   print *, ""
@@ -350,6 +367,13 @@ program popQC_main
       allocate(mendel_action(n_animals))
       mendel_action = 0
     end if
+
+    ! Step 8a: Resolve same-ID duplicate records before parent-seek
+    !   Case 1: ID + SNP identical -> merge & deduplicate
+    !   Case 2: ID same, SNP different -> Mendelian parent check to select correct record
+    print *, ""
+    print *, "  Step 8a: Resolving same-ID duplicate records..."
+    call resolve_same_id_duplicates(n_animals, n_geno_snps, mendel_action)
 
     ! Deferred identical-ID pairs: force into parent-seek unless already DELETE.
     if (allocated(id_merge_seek_flag)) then

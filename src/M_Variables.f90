@@ -39,17 +39,6 @@ type, PUBLIC :: SNPInfo
     integer :: Array_Chr
 end type SNPInfo
 
-type, PUBLIC :: PEDInfo
-    character(len=LEN_STR) :: BREED
-    character(len=LEN_STR) :: ID
-    character(len=LEN_STR) :: ARN
-    character(len=LEN_STR) :: SIRE
-    character(len=LEN_STR) :: DAM
-    integer :: SEX
-    integer :: BDate
-    character(len=LEN_STR) :: LOC
-end type PEDInfo
-
 ! =========================================================================
 ! QC 데이터 구조체 (SNP 품질 관리용)
 ! =========================================================================
@@ -86,6 +75,7 @@ type, PUBLIC :: POPQC_matrices
     real :: id_merge_confirm_match_threshold ! full-autosome confirm threshold for ID_MERGE
     real :: id_swap_compat_min           ! Minimum Mendel compatibility for ID swap detection
     integer :: id_swap_max_depth          ! Maximum recursion depth for ID swap chain
+    integer :: multi_resolved_action      ! 0=update PED, 1=delete record
 end type POPQC_matrices
 
 ! =========================================================================
@@ -101,7 +91,7 @@ type(FRQC_matrices), public :: FRQC
 type(POPQC_matrices), public :: POPQC
 
 ! Public subroutines
-public :: init_File, init_Ped, init_FRQC, init_POPQC
+public :: init_File, init_FRQC, init_POPQC
 
 contains
 
@@ -124,18 +114,6 @@ subroutine init_File(File)
     File%Header = 0
     File%NVAR = 0
 end subroutine init_File
-
-subroutine init_Ped(ped)
-    type(PEDInfo), intent(out) :: ped
-    ped%BREED = ''
-    ped%ID = ''
-    ped%ARN = ''
-    ped%SIRE = ''
-    ped%DAM = ''
-    ped%SEX = 0
-    ped%BDate = 0
-    ped%LOC = ''
-end subroutine init_Ped
 
 subroutine init_FRQC(FR_QC)
    type(FRQC_matrices), intent(out) :: FR_QC
@@ -172,6 +150,7 @@ subroutine init_POPQC(POP_QC)
     POP_QC%id_merge_confirm_match_threshold = 0.995
     POP_QC%id_swap_compat_min = 0.95
     POP_QC%id_swap_max_depth = 3
+    POP_QC%multi_resolved_action = 0
 end subroutine init_POPQC
 
 end module M_Variables

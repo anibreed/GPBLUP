@@ -1,6 +1,7 @@
 module M_QCIDMerge
   use M_Kinds
   use M_Variables
+  use M_ped, only: CPED
   use M_Hashtable
   use H_PedRead
   use M_QCMendel, only: is_duo_mendel_error, is_trio_mendel_error
@@ -12,6 +13,7 @@ module M_QCIDMerge
   public :: set_id_merge_context
   public :: merge_highly_identical_animals
   public :: finalize_deferred_identical_pairs
+  public :: resolve_same_id_duplicates
 
   type(PEDHashTable), pointer, save :: PHT => null()
   type(SNPInfo), pointer, save :: map_records(:) => null()
@@ -166,7 +168,7 @@ contains
     ! Adaptive fingerprint size based on number of sampled SNPs
     ! For large SNP sets (>2400), use more SNPs for better discrimination power
     ! Otherwise use minimum 16 SNPs
-    n_fp = min(FINGERPRINT_SNPS_MAX, max(FINGERPRINT_SNPS_MIN, n_sample / 150))
+    n_fp = min(n_sample, min(FINGERPRINT_SNPS_MAX, max(FINGERPRINT_SNPS_MIN, n_sample / 150)))
     do i = 1, in_n_animals
       if (len_trim(geno_animal_ids(i)) == 0) cycle
       keyv = 0_8
@@ -315,7 +317,6 @@ contains
       drop_id = trim(geno_animal_ids(drop_row))
 
       call merge_genotype_rows(keep_row, drop_row, in_n_snps, n_conflict_to_missing)
-      call rewrite_parent_references(drop_id, keep_id, in_n_animals, n_ref_updates)
 
       geno_matrix(drop_row, :) = 9_ki1
       geno_animal_ids(drop_row) = ''
@@ -404,7 +405,7 @@ contains
     real(r8) :: score(2), err_rate
     integer :: rows(2)
     character(len=LEN_STR) :: id_c
-    type(PEDInfo) :: ped_c
+    type(CPED) :: ped_c
     logical :: found
     integer :: nm_a, nm_b
     integer :: par_row
@@ -530,7 +531,7 @@ contains
 
     integer :: i
     logical :: found, changed
-    type(PEDInfo) :: ped_rec
+    type(CPED) :: ped_rec
 
     if (len_trim(in_old_id) == 0) return
     if (len_trim(in_new_id) == 0) return
@@ -655,7 +656,6 @@ contains
         drop_id = trim(geno_animal_ids(drop_row))
 
         call merge_genotype_rows(keep_row, drop_row, in_n_snps, n_conflict_to_missing)
-        call rewrite_parent_references(drop_id, keep_id, in_n_animals, n_ref_updates)
 
         geno_matrix(drop_row, :) = 9_ki1
         geno_animal_ids(drop_row) = ''
@@ -679,5 +679,245 @@ contains
     if (allocated(sample_idx)) deallocate(sample_idx)
     if (allocated(sample_maf)) deallocate(sample_maf)
   end subroutine finalize_deferred_identical_pairs
+
+  subroutine resolve_same_id_duplicates(in_n_animals, in_n_snps, io_mendel_action)
+    !-------------------------------------------------------------------
+    ! Resolve records sharing the same animal ID (duplicate rows):
+    !
+    !   Case 1 (ID + SNP identical):
+    !       Concordance >= IDENTICAL_THRESHOLD on all autosome SNPs.
+    !       Merge genotype data (fill missing from duplicates), keep
+    !       one record, blank the rest (action=2).
+    !
+    !   Case 2 (ID same, SNP different):
+    !       Evaluate each row's Mendelian compatibility against the
+    !       PED-registered parents.  Keep the row with the lowest
+    !       Mendel error rate; blank the rest (action=2).
+    !       If no genotyped parents exist, keep the row with the
+    !       highest call rate and flag it for parent-seek (action=1).
+    !-------------------------------------------------------------------
+    integer, intent(in)    :: in_n_animals, in_n_snps
+    integer, intent(inout) :: io_mendel_action(:)
+
+    integer,  parameter :: AUTOSOME_MIN = 1, AUTOSOME_MAX = 18
+    integer,  parameter :: MIN_COMPARE_SNPS = 100
+    real(r8), parameter :: IDENTICAL_THRESHOLD = 0.995_r8
+
+    integer :: i, j, k, s, r_chk
+    integer :: n_dup_groups, n_case1_merged, n_case2_resolved, n_case2_deferred
+    integer :: n_conflict_to_missing
+    integer :: grp_size, keep_row, drop_row
+    integer :: n_confirm_valid
+    integer :: n_valid, n_err
+    integer :: sire_row, dam_row, par_row
+    integer :: snp_idx, g_c, g_s, g_d
+    integer :: nm_cur, nm_best
+    real(r8) :: confirm_rate, best_score, err_rate
+    logical :: all_identical, found, has_parents
+    type(CPED) :: ped_rec
+
+    integer, allocatable :: grp_rows(:)
+    real(r8), allocatable :: grp_scores(:)
+    logical, allocatable :: visited(:)
+
+    if (.not. associated(geno_matrix))     return
+    if (.not. associated(geno_animal_ids)) return
+    if (.not. associated(PHT))             return
+
+    allocate(visited(in_n_animals))
+    allocate(grp_rows(in_n_animals))
+    allocate(grp_scores(in_n_animals))
+    visited = .false.
+
+    n_dup_groups       = 0
+    n_case1_merged     = 0
+    n_case2_resolved   = 0
+    n_case2_deferred   = 0
+    n_conflict_to_missing = 0
+
+    do i = 1, in_n_animals
+      if (visited(i)) cycle
+      if (len_trim(geno_animal_ids(i)) == 0) cycle
+
+      ! ── Collect all rows with the same ID ──────────────────────
+      grp_size = 0
+      do j = i, in_n_animals
+        if (len_trim(geno_animal_ids(j)) == 0) cycle
+        if (trim(geno_animal_ids(j)) == trim(geno_animal_ids(i))) then
+          grp_size = grp_size + 1
+          grp_rows(grp_size) = j
+        end if
+      end do
+      do k = 1, grp_size
+        visited(grp_rows(k)) = .true.
+      end do
+
+      if (grp_size <= 1) cycle   ! unique record -> nothing to do
+
+      n_dup_groups = n_dup_groups + 1
+      print '(a, a, a, i3, a)', &
+        '  Duplicate ID group: [', trim(geno_animal_ids(i)), '] x ', grp_size, ' records'
+
+      ! ── Check pairwise concordance on all autosome SNPs ────────
+      all_identical = .true.
+      do k = 2, grp_size
+        call compute_pair_similarity_confirm(grp_rows(1), grp_rows(k), in_n_snps, &
+                                             n_confirm_valid, confirm_rate)
+        if (n_confirm_valid < MIN_COMPARE_SNPS .or. confirm_rate < IDENTICAL_THRESHOLD) then
+          all_identical = .false.
+          exit
+        end if
+      end do
+
+      if (all_identical) then
+        ! ─── Case 1: identical SNPs -> merge & deduplicate ───────
+        keep_row = grp_rows(1)
+        do k = 2, grp_size
+          drop_row = grp_rows(k)
+          call merge_genotype_rows(keep_row, drop_row, in_n_snps, n_conflict_to_missing)
+          geno_matrix(drop_row, :) = 9_ki1
+          geno_animal_ids(drop_row) = ''
+          if (drop_row <= size(io_mendel_action)) io_mendel_action(drop_row) = 2
+          n_case1_merged = n_case1_merged + 1
+          print '(a, i0, a, i0, a)', &
+            '    Case1 (identical SNP): row ', drop_row, &
+            ' merged into row ', keep_row, ' (duplicate removed)'
+        end do
+      else
+        ! ─── Case 2: different SNPs -> Mendelian parent evaluation ──
+        found = pht_search(PHT, trim(geno_animal_ids(i)), ped_rec)
+
+        sire_row = 0; dam_row = 0; has_parents = .false.
+        if (found) then
+          if (len_trim(ped_rec%SIRE) > 0 .and. trim(ped_rec%SIRE) /= '0') then
+            do r_chk = 1, in_n_animals
+              if (len_trim(geno_animal_ids(r_chk)) == 0) cycle
+              if (trim(geno_animal_ids(r_chk)) == trim(ped_rec%SIRE)) then
+                sire_row = r_chk; exit
+              end if
+            end do
+          end if
+          if (len_trim(ped_rec%DAM) > 0 .and. trim(ped_rec%DAM) /= '0') then
+            do r_chk = 1, in_n_animals
+              if (len_trim(geno_animal_ids(r_chk)) == 0) cycle
+              if (trim(geno_animal_ids(r_chk)) == trim(ped_rec%DAM)) then
+                dam_row = r_chk; exit
+              end if
+            end do
+          end if
+          has_parents = (sire_row > 0 .or. dam_row > 0)
+        end if
+
+        if (has_parents) then
+          ! Score each row by Mendelian compatibility with parents
+          best_score = -1.0_r8
+          keep_row = grp_rows(1)
+
+          do k = 1, grp_size
+            n_valid = 0; n_err = 0
+
+            if (sire_row > 0 .and. dam_row > 0) then
+              ! ── Trio check ──
+              do s = 1, size(map_records)
+                if (map_records(s)%Chr < AUTOSOME_MIN .or. map_records(s)%Chr > AUTOSOME_MAX) cycle
+                snp_idx = map_records(s)%Array_All
+                if (snp_idx < 1 .or. snp_idx > in_n_snps) cycle
+                g_c = int(geno_matrix(grp_rows(k), snp_idx))
+                if (g_c == 9) cycle
+                g_s = int(geno_matrix(sire_row, snp_idx))
+                if (g_s == 9) cycle
+                g_d = int(geno_matrix(dam_row, snp_idx))
+                if (g_d == 9) cycle
+                n_valid = n_valid + 1
+                if (is_trio_mendel_error(g_c, g_s, g_d)) n_err = n_err + 1
+              end do
+            else
+              ! ── Duo check ──
+              par_row = sire_row
+              if (par_row == 0) par_row = dam_row
+              do s = 1, size(map_records)
+                if (map_records(s)%Chr < AUTOSOME_MIN .or. map_records(s)%Chr > AUTOSOME_MAX) cycle
+                snp_idx = map_records(s)%Array_All
+                if (snp_idx < 1 .or. snp_idx > in_n_snps) cycle
+                g_c = int(geno_matrix(grp_rows(k), snp_idx))
+                if (g_c == 9) cycle
+                g_s = int(geno_matrix(par_row, snp_idx))
+                if (g_s == 9) cycle
+                n_valid = n_valid + 1
+                if (is_duo_mendel_error(g_c, g_s)) n_err = n_err + 1
+              end do
+            end if
+
+            if (n_valid >= MIN_COMPARE_SNPS) then
+              err_rate = real(n_err, r8) / real(n_valid, r8)
+              grp_scores(k) = 1.0_r8 - err_rate
+            else
+              grp_scores(k) = -1.0_r8
+            end if
+
+            if (grp_scores(k) > best_score) then
+              best_score = grp_scores(k)
+              keep_row = grp_rows(k)
+            end if
+
+            print '(a, i0, a, f8.5, a, i0, a, i0, a)', &
+              '    Row ', grp_rows(k), ': Mendel compat=', grp_scores(k), &
+              ' (', n_err, '/', n_valid, ' errors)'
+          end do
+
+          ! Keep the best row, delete the rest
+          do k = 1, grp_size
+            if (grp_rows(k) == keep_row) cycle
+            drop_row = grp_rows(k)
+            geno_matrix(drop_row, :) = 9_ki1
+            geno_animal_ids(drop_row) = ''
+            if (drop_row <= size(io_mendel_action)) io_mendel_action(drop_row) = 2
+          end do
+          n_case2_resolved = n_case2_resolved + 1
+          print '(a, i0)', '    Case2 resolved: kept row ', keep_row
+
+        else
+          ! No genotyped parents -> keep best call-rate row, flag for parent-seek
+          nm_best = -1
+          keep_row = grp_rows(1)
+          do k = 1, grp_size
+            nm_cur = 0
+            do s = 1, in_n_snps
+              if (int(geno_matrix(grp_rows(k), s)) /= 9) nm_cur = nm_cur + 1
+            end do
+            if (nm_cur > nm_best) then
+              nm_best = nm_cur
+              keep_row = grp_rows(k)
+            end if
+          end do
+
+          do k = 1, grp_size
+            if (grp_rows(k) == keep_row) cycle
+            drop_row = grp_rows(k)
+            geno_matrix(drop_row, :) = 9_ki1
+            geno_animal_ids(drop_row) = ''
+            if (drop_row <= size(io_mendel_action)) io_mendel_action(drop_row) = 2
+          end do
+          if (keep_row <= size(io_mendel_action)) then
+            if (io_mendel_action(keep_row) /= 2) io_mendel_action(keep_row) = 1
+          end if
+          n_case2_deferred = n_case2_deferred + 1
+          print '(a, i0, a)', &
+            '    Case2 (no genotyped parents): kept row ', keep_row, ' -> flagged for parent-seek'
+        end if
+      end if
+    end do
+
+    print *, ''
+    print '(a, i8)', '  Same-ID duplicate groups found:       ', n_dup_groups
+    print '(a, i8)', '  Case 1 (identical SNP) merged:        ', n_case1_merged
+    print '(a, i8)', '  Case 2 (different SNP) PED-resolved:  ', n_case2_resolved
+    print '(a, i8)', '  Case 2 (different SNP) -> parent-seek:', n_case2_deferred
+    print '(a, i8)', '  SNP conflicts set to missing:         ', n_conflict_to_missing
+
+    if (allocated(visited))    deallocate(visited)
+    if (allocated(grp_rows))   deallocate(grp_rows)
+    if (allocated(grp_scores)) deallocate(grp_scores)
+  end subroutine resolve_same_id_duplicates
 
 end module M_QCIDMerge

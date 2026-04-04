@@ -43,6 +43,15 @@ GPBLUP/
 
 ### 1. 간단한 방법 - Makefile 사용
 
+#### One-batch 설치 (권장)
+```bash
+cd /home/dhlee/GPBLUP
+./install.sh
+# 또는
+./install.sh /opt/gpblup
+```
+ReadFR, popQC, relped, relgeno를 한번에 빌드하여 PREFIX/bin에 설치합니다.
+
 #### Release 빌드 (최적화, 권장)
 ```bash
 cd /home/dhlee/GPBLUP

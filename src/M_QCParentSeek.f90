@@ -1,6 +1,7 @@
 module M_QCParentSeek
   use M_Kinds
   use M_Variables
+  use M_ped, only: CPED
   use M_StrEdit, only: bdate_to_jdn
   use M_Hashtable
   use H_PedRead
@@ -23,13 +24,16 @@ module M_QCParentSeek
 
 contains
 
-  subroutine set_parent_seek_context(in_pht, in_map_records, in_geno_matrix, in_geno_animal_ids, in_ped_key_field, in_snp_call_rate, in_snp_maf, in_snp_hwe_pvalue, in_hwe_threshold)
+  subroutine set_parent_seek_context(in_pht, in_map_records, in_geno_matrix, in_geno_animal_ids, &
+                                     in_ped_key_field, in_snp_call_rate, in_snp_maf, &
+                                     in_snp_hwe_pvalue, in_hwe_threshold)
     type(PEDHashTable), target, intent(inout) :: in_pht
     type(SNPInfo), target, intent(in) :: in_map_records(:)
     integer(kind=ki1), target, intent(inout) :: in_geno_matrix(:,:)
     character(len=LEN_STR), target, intent(inout) :: in_geno_animal_ids(:)
     character(len=*), intent(in) :: in_ped_key_field
-    real(r8), target, intent(in), optional :: in_snp_call_rate(:), in_snp_maf(:), in_snp_hwe_pvalue(:)
+    real(r8), target, intent(in), optional :: in_snp_call_rate(:), in_snp_maf(:), &
+                         in_snp_hwe_pvalue(:)
     real(r8), intent(in), optional :: in_hwe_threshold
     PHT => in_pht
     map_records => in_map_records
@@ -89,7 +93,7 @@ contains
     !-------------------------------------------------------------------
     integer,   intent(in) :: in_n_animals
     integer,   intent(in) :: in_n_snps
-    integer,   intent(in) :: in_action(:)
+    integer,   intent(inout) :: in_action(:)
     real(r8),  intent(in) :: in_candidate_threshold
     type(POPQC_matrices), intent(in) :: in_popqc
     integer,   intent(in), optional :: in_sex_qc_status(:)  ! 0=pass, 1=fail, 2=ambiguous, -1=no_data
@@ -104,7 +108,7 @@ contains
     ! ── Local variables ───────────────────────────────────────────────
     integer :: i, c, j, k
     integer :: n_seek, n_assigned_bc, n_no_match, n_id_swap
-    integer :: n_parent_update, n_multi_resolved, n_not_found
+    integer :: n_parent_update, n_multi_resolved, n_multi_resolved_deleted, n_not_found
     integer :: n_id_swap_direct, n_id_swap_recursive, swap_depth_found
     integer :: n_id_swap_changed, n_id_swap_nochange
     integer :: n_parent_update_changed, n_parent_update_nochange
@@ -119,7 +123,7 @@ contains
     real(r8) :: best_m_g,      best_f_g
     integer  :: best_m_cand,   best_f_cand
     integer  :: n_m_cands,     n_f_cands     ! count of G-passing candidates per slot
-    type(PEDInfo) :: ped_target, ped_cand, ped_new
+    type(CPED) :: ped_target, ped_cand, ped_new
     logical  :: found, age_ok, g_ok
     logical  :: upd_sire, upd_dam
     character(len=LEN_STR) :: sire_id, dam_id
@@ -127,6 +131,7 @@ contains
     character(len=4)       :: outcome_code
     character(len=LEN_STR) :: orig_id, final_id, swap_target_id
     character(len=LEN_STR) :: animal_disp
+    character(len=LEN_STR) :: norm_id
     character(len=LEN_STR) :: sire_old_disp, sire_new_disp, dam_old_disp, dam_new_disp
     character(len=10)      :: change_class
     character(len=3)       :: change_code
@@ -180,7 +185,7 @@ contains
     logical  :: swap_bdate_ok, swap_sex_ok, q_bdate_ok, q_sex_ok
     logical  :: is_id_swap, swap_found, fq
     logical, allocatable :: swap_visited(:)
-    type(PEDInfo) :: ped_q
+    type(CPED) :: ped_q
 
     ! Pre-initialise allocatable arrays so gfortran array-descriptor bounds are
     ! always valid even before select_parent_seek_snps is called.
@@ -221,6 +226,7 @@ contains
     n_not_found_changed = 0
     n_not_found_nochange = 0
     summary_src_out_mdl = 0
+    n_multi_resolved_deleted = 0
     g_tolerance = real(POPQC%parent_seek_g_tol, r8)
     if (g_tolerance <= 0.0_r8) g_tolerance = 0.15_r8
     mendel_thr = real(POPQC%mendel_viol_threshold, r8)
@@ -235,7 +241,11 @@ contains
       print *, ""
       print *, "  Animals marked for deletion:"
       do i = 1, in_n_animals
-        if (in_action(i) == 2) print '(4x, a)', trim(geno_animal_ids(i))
+        if (in_action(i) == 2) then
+          if (len_trim(geno_animal_ids(i)) > 0) then
+            print '(4x, a32)', adjustl(geno_animal_ids(i))
+          end if
+        end if
       end do
     end if
 
@@ -696,7 +706,7 @@ contains
         n_id_swap = n_id_swap + 1
         if (swap_m_cand > 0) swap_target_id = trim(geno_animal_ids(swap_m_cand))
         block
-          type(PEDInfo) :: ped_swap
+          type(CPED) :: ped_swap
           logical :: fs
           fs = pht_search(PHT, trim(geno_animal_ids(swap_m_cand)), ped_swap)
           if (fs) then
@@ -745,22 +755,44 @@ contains
         sire_id = '0';  dam_id = '0'
       end if
 
+      ! ── GENO ID normalization (PED immutable) ────────────────────
+      norm_id = ''
+      if (trim(outcome_tag) == 'ID_SWAP' .and. swap_m_cand > 0) then
+        block
+          type(CPED) :: ped_swap
+          logical :: fs
+          fs = pht_search(PHT, trim(geno_animal_ids(swap_m_cand)), ped_swap)
+          if (fs .and. len_trim(ped_swap%ID) > 0) then
+            norm_id = trim(ped_swap%ID)
+          else
+            norm_id = trim(geno_animal_ids(swap_m_cand))
+          end if
+        end block
+      else
+        if (len_trim(ped_target%ID) > 0) norm_id = trim(ped_target%ID)
+      end if
+      if (len_trim(norm_id) > 0) geno_animal_ids(i) = trim(norm_id)
+
+      ! ── Multi-resolved handling option (update vs delete) ─────────
+      if (trim(outcome_tag) == 'MULTI_RESOLVED' .and. in_popqc%multi_resolved_action == 1) then
+        in_action(i) = 2
+        geno_matrix(i, :) = 9_ki1
+        geno_animal_ids(i) = ''
+        n_multi_resolved_deleted = n_multi_resolved_deleted + 1
+        cycle
+      end if
+
       ! ── Geno-data corrections and pedigree updates ────────────────
       select case (trim(outcome_tag))
       case ('ID_SWAP')
-        ! Correct animal ID in geno data; sex follows new ID via PED lookup
-        if (swap_m_cand > 0) geno_animal_ids(i) = trim(geno_animal_ids(swap_m_cand))
+        ! Correct animal ID in geno data; normalized to PED ID
         final_id = trim(geno_animal_ids(i))
       case ('PARENT_UPDATE', 'MULTI_RESOLVED')
-        ! True parents identified; update pedigree hash for post-seek recheck.
-        if (upd_sire .or. upd_dam) then
-          call pht_insert_with_key(PHT, ped_new, trim(ped_animal_key_field))
-        end if
+        ! True parents identified; keep PED hash unchanged (input PED immutable).
         n_assigned_bc = n_assigned_bc + 1
       case ('NOT_FOUND')
         ! Keep original ID/genotype to maximize retention.
         ! Parent IDs are set to unknown so downstream imputation can still use the animal.
-        call pht_insert_with_key(PHT, ped_new, trim(ped_animal_key_field))
         final_id = trim(geno_animal_ids(i))
       end select
 
@@ -908,8 +940,24 @@ contains
         end if
       end if
       if (trim(outcome_tag) == 'MULTI_RESOLVED') then
+        if (m_top_compat > 0.0_r8) then
+          write(change_field_disp, '(a, f7.4)') 'TOP1_SIRE_COMPAT=', m_top_compat
+          if (len_trim(parent_change_disp) > 0) then
+            parent_change_disp = trim(parent_change_disp) // ' ' // trim(change_field_disp)
+          else
+            parent_change_disp = trim(change_field_disp)
+          end if
+        end if
         if (best_m_margin > 0.0_r8) then
           write(change_field_disp, '(a, f7.4)') 'TOP2_SIRE_MARGIN=', best_m_margin
+          if (len_trim(parent_change_disp) > 0) then
+            parent_change_disp = trim(parent_change_disp) // ' ' // trim(change_field_disp)
+          else
+            parent_change_disp = trim(change_field_disp)
+          end if
+        end if
+        if (f_top_compat > 0.0_r8) then
+          write(change_field_disp, '(a, f7.4)') 'TOP1_DAM_COMPAT=', f_top_compat
           if (len_trim(parent_change_disp) > 0) then
             parent_change_disp = trim(parent_change_disp) // ' ' // trim(change_field_disp)
           else
@@ -1041,6 +1089,9 @@ contains
     print '(a, i8)', "  Parent update total:             ", n_parent_update
     print '(a, i8, a, i8)', "    - Changed / No change:          ", n_parent_update_changed, " /", n_parent_update_nochange
     print '(a, i8)', "  Multi resolved total:            ", n_multi_resolved
+    if (n_multi_resolved_deleted > 0) then
+      print '(a, i8)', "    - Deleted by parameter:         ", n_multi_resolved_deleted
+    end if
     print '(a, i8, a, i8)', "    - Changed / No change:          ", n_multi_resolved_changed, " /", n_multi_resolved_nochange
     print '(a, i8)', "  ID swap total:                   ", n_id_swap
     print '(a, i8, a, i8)', "    - Changed / No change:          ", n_id_swap_changed, " /", n_id_swap_nochange
@@ -1118,7 +1169,7 @@ contains
     integer, intent(in) :: in_child_jdn
     logical, intent(out) :: out_bdate_ok, out_sex_ok
 
-    type(PEDInfo) :: ped_q_local, ped_sire, ped_dam
+    type(CPED) :: ped_q_local, ped_sire, ped_dam
     logical :: fq_local, fs_local, fd_local
     integer :: sire_jdn, dam_jdn
 

@@ -158,64 +158,56 @@ contains
    end if
  END SUBROUTINE readline_real
 
-integer function N_recf(filename) result(rec_N)
+integer function N_recf(filename, rec_size) result(rec_N)
  character(LEN=*),intent(in)::filename
+ integer,intent(in),optional:: rec_size
  character(LEN=512):: REC
  integer::ios,unitF
 
- unitF=fopen(filename)
+ if(present(rec_size)) then
+    unitF=fopen(filename, rec_size)
+ else
+    unitF=fopen(filename)
+ endif
  rec_N=0
-    ! Loop through input file to count records
-    do
-      read(unitF, '(A)', iostat=ios) REC
-      if (ios /= 0) exit
-      
-      ! Skip empty lines and comment lines (starting with #)
-      if (len_trim(REC) > 0 .and. REC(1:1) /= '#') then
-        rec_N = rec_N + 1
-      end if
-    end do
-      close(unit=unitF)
+ if (unitF < 0) return
+      ! Loop through input file to count records
+      do
+         read(unitF, '(A)', iostat=ios) REC
+         if (ios /= 0) exit
+
+         ! Skip empty lines and comment lines (starting with #)
+         if (len_trim(REC) > 0 .and. REC(1:1) /= '#') then
+            rec_N = rec_N + 1
+         end if
+      end do
+         close(unit=unitF)
  end function N_recf
 
 integer function fopen(filename, recl)
-    character(len=*), intent(in) :: filename
-    integer, intent(in), optional :: recl
-    integer :: unit, ios
-    logical :: file_exists
-    
-    ! Check if file exists
-    inquire(file=trim(filename), exist=file_exists)
-      if (.not. file_exists) then
-         write(*,'(A)') "ERROR: Parameter file not found: "//trim(filename)
-      write(*,'(A)') "  -> Searching in current directory and common paths..."
-      fopen = -1
-      return
-    end if
-    
-    ! Find available unit number
-    unit = 10
-    do while (unit < 100)
-      inquire(unit=unit, opened=file_exists)
-      if (.not. file_exists) exit
-      unit = unit + 1
-    end do
-    
-    ! Open file
-    if (present(recl)) then
-        open(unit=unit, file=trim(filename), status='old', action='read', iostat=ios, recl=recl)
-    else
-        open(unit=unit, file=trim(filename), status='old', action='read', iostat=ios)
-    end if
+      character(len=*), intent(in) :: filename
+      integer, intent(in), optional :: recl
+      logical :: file_exists, file_opened
+      integer :: rec_len
 
-    if (ios /= 0) then
-      write(*,'(A)') "ERROR: Failed to open file: "//trim(filename)
-      write(*,'(A,I0)') "  -> I/O Error code: ", ios
-      fopen = -1
-      return
-    end if
-    
-    fopen = unit
+      rec_len = MAX_RECL
+      if (present(recl)) rec_len = recl
+
+      inquire(file=trim(filename), exist=file_exists, opened=file_opened, number=fopen)
+      if (file_opened) close(unit=fopen)
+
+      fopen = 10
+      do
+         fopen = fopen + 1
+         inquire(unit=fopen, opened=file_opened)
+         if (.not. file_opened) exit
+      end do
+
+      if (file_exists) then
+         open(unit=fopen, file=trim(filename), recl=rec_len, status='unknown')
+      else
+         open(unit=fopen, file=trim(filename), recl=rec_len, status='new')
+      endif
 end function fopen
 
 end module M_ReadFile

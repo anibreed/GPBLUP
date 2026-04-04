@@ -1,6 +1,7 @@
 module M_QCSexCheck
   use M_Kinds
   use M_Variables
+  use M_ped, only: CPED
   use M_Hashtable
   use H_PedRead
   implicit none
@@ -48,7 +49,7 @@ contains
     integer, intent(out) :: out_sex(:)
 
     integer :: i
-    type(PEDInfo) :: ped_rec
+    type(CPED) :: ped_rec
     logical :: found
 
     out_sex = UNKNOWN

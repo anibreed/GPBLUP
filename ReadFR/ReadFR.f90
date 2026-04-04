@@ -5,8 +5,9 @@ program ReadFR
   use M_StrEdit
   use M_ReadFile
   use M_readpar, only: read_parameters
-  use H_PedRead
-  use H_MapRead
+   use M_ped, only: CPED, init_cped_record
+   use M_IO_Ped
+   use M_IO_Map
   implicit none
 
   character(len=MAX_RECL) :: Par_File
@@ -34,7 +35,7 @@ program ReadFR
   ! Data storage for genotypes
   integer(kind=ki1), allocatable :: Genotypes(:,:)
   character(len=LEN_STR), allocatable :: FR_AnimalIDs(:)
-  type(PEDInfo), allocatable :: FR_AnimalPeds(:)
+   type(CPED), allocatable :: FR_AnimalPeds(:)
   integer :: nFR_Animals, current_animal_idx, current_snp_idx
   
   ! Statistics gathering
@@ -52,7 +53,7 @@ program ReadFR
   character(len=MAX_RECL) :: raw_file_name
    character(len=MAX_STR) :: date_prefix, fr_basename
    integer :: slash_pos
-  type(PEDInfo) :: ani_ped
+   type(CPED) :: ani_ped
 
   version_str = '1.5 - Numericalization for FinalReport file to Compatible GENO Output'
   call version(trim(version_str))
@@ -327,7 +328,7 @@ program ReadFR
 
         ! 현재 개체의 가계 정보 미리 로드 (XC(2) 참조를 위해)
         if (.not. pht_search(PED_BY_ID, animal_id, ani_ped)) then
-           call init_Ped(ani_ped)
+           call init_cped_record(ani_ped)
            ani_ped%ID = animal_id
            ani_ped%ARN = raw_animal_key
         end if
@@ -507,60 +508,7 @@ program ReadFR
   end do
   print *, "================================================================================================================"
   print *
-  ! Per-animal × Per-chromosome valid SNP table (Animal rows × Chr columns)
-  block
-     integer :: n_active_chr
-     integer, allocatable :: active_chrs(:)   ! VLA 대신 allocatable (segfault 예방)
-     integer :: jj, kk
-     character(len=8) :: col_hdr
-
-     allocate(active_chrs(max(1, Max_Chr_Num)))
-
-     ! 활성 염색체 수집
-     n_active_chr = 0
-     do kk = 1, Max_Chr_Num
-        if (Chr_Max_Idx(kk) > 0) then
-           n_active_chr = n_active_chr + 1
-           active_chrs(n_active_chr) = kk
-        end if
-     end do
-
-     ! 헤더 1행: 열 이름 (Animal_ID | Chr1 | Chr2 | ... | Valid_N | Rate%)
-     write(*, '(A15)', advance='no') "Animal_ID"
-     do jj = 1, n_active_chr
-        select case (active_chrs(jj))
-           case (19); col_hdr = "ChrXY"
-           case (20); col_hdr = "ChrXX"
-           case (21); col_hdr = "ChrY"
-           case (23); col_hdr = "Unknown"
-           case default
-              write(col_hdr, '("Chr",I0)') active_chrs(jj)
-        end select
-        write(*, '(1X,A8)', advance='no') trim(col_hdr)
-     end do
-     write(*, '(1X,A8,1X,A7)') "Valid_N", "Rate(%)"
-
-     ! 헤더 2행: 염색체별 총 SNP 수 (MaxSNP)
-     write(*, '(A15)', advance='no') "(MaxSNP)"
-     do jj = 1, n_active_chr
-        write(*, '(1X,I8)', advance='no') Chr_Max_Idx(active_chrs(jj))
-     end do
-     write(*, '(1X,I8,1X,A7)') nSNP, "100.00"
-
-     ! 구분선
-     write(*, '(A)') repeat('-', 15 + (n_active_chr + 2) * 9)
-
-     ! 개체별 데이터 행
-     do i = 1, nFR_Animals
-        write(*, '(A15)', advance='no') trim(FR_AnimalIDs(i))
-        do jj = 1, n_active_chr
-           write(*, '(1X,I8)', advance='no') Count_Valid_Chr(active_chrs(jj), i)
-        end do
-        write(*, '(1X,I8,1X,F7.2)') Count_Valid_Ani(i), &
-           real(Count_Valid_Ani(i)) / real(max(1, nSNP)) * 100.0
-     end do
-  end block
-  print *, "====================================================================="
+  ! Per-animal × Per-chromosome valid SNP table suppressed (verbose log)
 
   call mht_free(MHT_MAP)
    call pht_free(PED_BY_ID)

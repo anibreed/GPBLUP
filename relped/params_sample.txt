@@ -1,7 +1,0 @@
-# Quick test parameter file
-PEDFILE: sample.ped
-PEDINFO: 1 2 3 4 5
-DATAFILE: sample_ref.ped
-DATAINFO: 1 5
-INBREED: 1
-RELATION: 1

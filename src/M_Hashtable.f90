@@ -7,6 +7,7 @@ module M_Hashtable
   
   public :: htab_get_prime_size
   public :: htab_hash_string
+  public :: htab_hash_string2
   public :: htab_hash_int
   
 contains
@@ -58,6 +59,33 @@ contains
     end do
     hash_val = int(abs(hash_i8))
   end function htab_hash_string
+
+  !**********************************************************************
+  ! Secondary string hash for double hashing probe step
+  ! Returns value in [1, table_size-1] when table_size > 1
+  !**********************************************************************
+  integer function htab_hash_string2(key, table_size) result(step_val)
+    character(len=*), intent(in) :: key
+    integer, intent(in) :: table_size
+    integer :: i
+    integer(kind=ki8) :: h2_i8
+
+    if (table_size <= 1) then
+      step_val = 1
+      return
+    end if
+
+    if (len_trim(key) == 0) then
+      step_val = 1
+      return
+    end if
+
+    h2_i8 = 0_ki8
+    do i = 1, len_trim(key)
+      h2_i8 = mod(h2_i8 * 131_ki8 + int(iachar(key(i:i)), ki8) + int(i, ki8), int(table_size - 1, ki8))
+    end do
+    step_val = 1 + int(h2_i8)
+  end function htab_hash_string2
 
   !**********************************************************************
   ! 공통 정수 해시 함수

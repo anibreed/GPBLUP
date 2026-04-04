@@ -99,11 +99,13 @@ QC Criteria Configuration:
 
 ## 🔥 Quick Start
 
-### 1. Installation
+### 1. Installation (One-batch build + install)
 ```bash
 git clone https://github.com/dmlee5091/GPBLUP.git
 cd GPBLUP
-PREFIX=$HOME/.local ./install.sh
+./install.sh               # installs to ~/.local/bin
+# or
+./install.sh /opt/gpblup    # installs to /opt/gpblup/bin
 ```
 
 ### 2. Prepare Input Files
@@ -215,6 +217,15 @@ This platform has been successfully applied to:
 - GBLUPF90 compatible output
 - Standard GENO format
 - Compatible with existing analysis pipelines
+
+---
+
+## 📖 Documentation
+
+- [INSTALL.md](INSTALL.md)
+- [USER_GUIDE.md](USER_GUIDE.md)
+- [BUILD.md](BUILD.md)
+- [BUILD_GUIDE.md](BUILD_GUIDE.md)
 
 ---
 
