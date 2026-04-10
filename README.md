@@ -10,7 +10,7 @@ core modules and program-specific logic.
 - popQC: SNP and animal QC pipeline
 - relped: pedigree renumbering and A/Ainv matrix outputs
 - relgeno: genomic relationship matrix processing
-- phimpute: phasing and imputation
+- phimpute: missing SNP imputation (pedigree-aware, configurable)
 
 ## Quick Start
 
@@ -75,6 +75,6 @@ build/      Build artifacts
 
 1. ReadFR: FinalReport -> numeric GENO
 2. popQC: population QC and filtering
-3. phimpute: impute missing SNPs
+3. phimpute: impute missing SNPs (pedigree-aware)
 4. relgeno: G and G inverse
 5. relped: A and A inverse
