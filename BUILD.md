@@ -546,7 +546,7 @@ If problems persist:
 ---
 
 **Version**: 1.0  
-**Last Updated**: 2024  
+**Last Updated**: 2026/04/17  
 **Status**: Production Ready  
-**Maintained By**: GPBLUP Development Team
+**Maintained By**: Dr. DEUKMIN LEE
 
