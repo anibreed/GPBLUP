@@ -1,68 +1,67 @@
 # GPBLUP User Guide
 
-This guide covers the four main programs: ReadFR, popQC, relped, and relgeno.
+This guide summarizes how to run each program. For full details, use the
+program-specific documentation listed below.
 
-## Common Notes
+## End-to-End Workflow
 
-- All executables are placed under `bin/` (or `PREFIX/bin` if installed).
-- Input files are controlled by parameter files described below.
+1. ReadFR: convert Illumina FinalReport to numeric GENO with initial QC
+2. popQC: population-level SNP and animal QC
+3. phimpute: impute missing SNPs in the valid SNP set
+4. relgeno: compute G and G inverse from SNP data
+5. relped: compute A and A inverse from pedigree data
 
 ## ReadFR
 
-Purpose: QC and preprocessing for Illumina FinalReport files.
+Purpose: parse Illumina FinalReport files and generate GENO output.
 
-Usage:
 ```bash
 ReadFR <parameter_file>
 ```
 
-Key inputs typically include:
-- FinalReport file
-- Pedigree file
-- Map file
+Docs: [ReadFR/README.md](ReadFR/README.md), [ReadFR/READFR_USER_MANUAL.md](ReadFR/READFR_USER_MANUAL.md)
 
 ## popQC
 
-Purpose: SNP/animal QC pipeline.
+Purpose: SNP and animal QC pipeline.
 
-Usage:
 ```bash
 popQC <parameter_file>
 ```
 
+Docs: [popQC/README.md](popQC/README.md), [popQC/PIPELINE_GUIDE.md](popQC/PIPELINE_GUIDE.md)
+
 ## relped
 
-Purpose: Pedigree renumbering and relationship matrices.
+Purpose: pedigree renumbering and A/Ainv matrix outputs.
 
-Usage:
 ```bash
 relped <parameter_file>
 ```
 
-Outputs:
-- Renumbered pedigree file
-- A and Ainv matrices (binary and/or text based on settings)
-
-Notes:
-- Text triplet files include `row col value original_row_id original_col_id`.
-- Use `RELPED_TRIPLET_EPS` to skip tiny values in triplet outputs.
-- Set `RELPED_LOG` to enable a run log file.
+Docs: [relped/README.md](relped/README.md)
 
 ## relgeno
 
-Purpose: Genomic relationship matrix processing.
+Purpose: genomic relationship matrix processing.
 
-Usage:
 ```bash
 relgeno <parameter_file>
 ```
 
-## Parameter Files
+Docs: [relgeno/RELGENO_PARAMS.md](relgeno/RELGENO_PARAMS.md)
 
-Each program has its own parameter file format. See the example files in the
-project directories for exact field names and layouts.
+## phimpute
 
-## Output Locations
+Purpose: phasing and imputation.
 
-- Default: output paths are controlled by parameter files.
-- Binaries: `bin/` or `PREFIX/bin` if installed.
+```bash
+phimpute <parameter_file>
+```
+
+Docs: [PHimpute/README.md](PHimpute/README.md)
+
+## Additional References
+
+- Algorithm background: [docs/ALGORITHM_BACKGROUND.md](docs/ALGORITHM_BACKGROUND.md)
+- Model proof (sketches): [docs/MODEL_PROOF.md](docs/MODEL_PROOF.md)
