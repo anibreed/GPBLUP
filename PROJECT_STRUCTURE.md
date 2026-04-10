@@ -338,7 +338,7 @@ make all
 
 ---
 
-**Last Updated**: 2024
-**Maintained By**: GPBLUP Team
-**Version**: 1.0 - Project Restructuring Complete
+**Last Updated**: 2026/04/17
+**Maintained By**: Dr. DEUKMIN LEE
+**Version**: 1.0
 
