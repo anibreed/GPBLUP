@@ -93,6 +93,7 @@ GENO_*.geno
 /A_triplets.txt
 /GENO_210624*.txt
 /POPQC_GENO_cleaned.txt
+/pedrel/Geno_cleaned.txt
 /popQC/parameter_popqc_abs.txt
 /relped/relped_test
 /relped/test_params_omp*.txt
