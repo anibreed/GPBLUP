@@ -13,6 +13,8 @@ Missing SNP imputation from valid SNP datasets.
 phimpute <parameter_file>
 ```
 
+Parameter settings: [PARAMETER_GUIDE.md](PARAMETER_GUIDE.md)
+
 See USER_GUIDE.md in the repository root for the pipeline context.
 
 ## Source Layout
