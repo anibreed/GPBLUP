@@ -1,5 +1,7 @@
 # GPBLUP
 
+> **⚠️ Repository note.** This repository (`anibreed/gpblup`) hosts the **GPBLUP** genomic-evaluation program. The **genomQC** program that was previously published at `anibreed/GPBLUP` has been renamed and moved to **[`anibreed/genomQC`](https://github.com/anibreed/genomQC)**. If a link to `anibreed/GPBLUP` brought you here while looking for genomQC, please go to **[anibreed/genomQC](https://github.com/anibreed/genomQC)**.
+
 **A matrix-free single-step genomic BLUP engine for multi-breed, multi-herd pig genetic evaluation with genomic genetic groups.**
 
 GPBLUP is the terminal stage of the genomQC → impQC → GPBLUP pipeline. It takes curated genotypes and pedigree and returns genomic estimated breeding values (GEBV), total merit, reliabilities, and candidate rankings — driven by a single, self-configuring parameter file.
