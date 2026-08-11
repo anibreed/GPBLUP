@@ -36,7 +36,7 @@ Threads are controlled by `OMP_NUM_THREADS`:
 OMP_NUM_THREADS=16 ./bin/gpblup model.par
 ```
 
-A complete, annotated example parameter file is in [`examples/model_demo.par`](../examples/model_demo.par).
+A complete, runnable synthetic example (data + annotated parameter file + one-command runner) is in [`demo/`](../demo/); see [`demo/model_demo.par`](../demo/model_demo.par) and [`demo/README_demo.md`](../demo/README_demo.md).
 
 ## 3. Parameter file
 

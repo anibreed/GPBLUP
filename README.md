@@ -24,12 +24,19 @@ This repository distributes the **compiled executables and documentation** under
 
 ```bash
 chmod +x bin/*
-./bin/gpblup  examples/model_demo.par
+cd demo
+./run_demo.sh
 ```
 
-`examples/model_demo.par` is an annotated example parameter file (two-trait single-step model, APY engine). See [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for the parameter-file sections, input/output formats, and the genetic-group workflow.
+The `demo/` folder contains a **fully synthetic** dataset (700 animals, 480 genotyped, 800 SNP; no real-animal data) with an annotated parameter file `model_demo.par`. `run_demo.sh` runs a two-trait single-step (H) evaluation with the APY engine and then correlates the GEBV against the hidden true breeding values. Everything is deterministic (fixed seed). See [demo/README_demo.md](demo/README_demo.md).
 
-> **Note:** a fully synthetic demonstration dataset (phenotype/pedigree/genotype files that run end-to-end with `model_demo.par`) will be added in a subsequent release. The example parameter file documents the required input formats.
+To run on your own data:
+
+```bash
+./bin/gpblup  model.par
+```
+
+See [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for the parameter-file sections, input/output formats, and the genetic-group workflow.
 
 ## Data availability
 

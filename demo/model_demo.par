@@ -1,5 +1,5 @@
-# GPBLUP demo parameter file (pipeline-native format)
-# Two-trait animal model, single-step (H) genomic kernel, APY engine.
+# GPBLUP synthetic-demo parameter file
+# Two-trait single-step (H) genomic evaluation, APY engine. Fully synthetic data.
 
 [DATA]
 PHENOTYPE:    phen.txt
@@ -7,6 +7,7 @@ PHENO_HEADER: 1
 PHENO_DELIM:  SPACE
 PEDIGREE:     ped.txt
 GENOTYPE:     geno.txt
+GENO_MISS:    9
 
 [TRAITS]
 N_TRAIT: 2
@@ -20,19 +21,20 @@ EFFECT = herd_year  3  FIXED   1 2
 EFFECT = sex        4  FIXED   1 2
 EFFECT = age        7  COV     1 2
 EFFECT = animal     1  RANDOM  1 2  STRUCT=ANIMAL_H
-EFFECT = litter     8  RANDOM  1    STRUCT=IID
+EFFECT = litter     8  RANDOM  1 2  STRUCT=IID
 
 [VARIANCES]
 GENETIC  = 12.0 3.0 ; 3.0 9.0
 RESIDUAL = 30.0 5.0 ; 5.0 25.0
+litter   = 5.0 0.0 ; 0.0 3.0
 
 [GENOMIC]
 KERNEL:      H
 ENGINE:      APY
-APY_CORE:    4000
+APY_CORE:    150
 POLYGENIC_W: 0.05
 
 [INFERENCE]
-METHOD:   REML_AI
-MAX_ITER: 100
-CONV_TOL: 1e-10
+METHOD:   BLUP
+MAX_ITER: 500
+CONV_TOL: 1e-8
