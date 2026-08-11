@@ -49,7 +49,7 @@ The individual-level pig genotype and pedigree records used to validate GPBLUP a
 See [CITATION.cff](CITATION.cff):
 
 > Lee D. GPBLUP: a matrix-free single-step genomic BLUP engine for multi-breed, multi-herd pig genetic evaluation with genomic genetic groups. *Genetics Selection Evolution* (2026).
-> Archived release: Zenodo, DOI 10.5281/zenodo.XXXXXXX
+> Archived release: Zenodo, DOI 10.5281/zenodo.21888831
 
 ## License
 
