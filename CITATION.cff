@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use GPBLUP, please cite the paper and the archived software release."
+title: "GPBLUP: a matrix-free single-step genomic BLUP engine for multi-breed, multi-herd pig genetic evaluation with genomic genetic groups"
+authors:
+  - family-names: Lee
+    given-names: Deukmin
+    orcid: "https://orcid.org/0000-0001-7993-9966"
+    affiliation: "Department of Animal Sciences, Hankyong National University, Republic of Korea"
+version: "1.0.0"
+license: MIT
+doi: "10.5281/zenodo.XXXXXXX"
+url: "https://github.com/anibreed/GPBLUP"
+date-released: "2026-01-01"
+preferred-citation:
+  type: article
+  title: "GPBLUP: a matrix-free single-step genomic BLUP engine for multi-breed, multi-herd pig genetic evaluation with genomic genetic groups"
+  authors:
+    - family-names: Lee
+      given-names: Deukmin
+      orcid: "https://orcid.org/0000-0001-7993-9966"
+  journal: "Genetics Selection Evolution"
+  year: 2026

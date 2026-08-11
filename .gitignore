@@ -1,0 +1,23 @@
+# === Source code is NOT part of this distribution — never commit it here ===
+*.f90
+*.f
+*.F90
+*.mod
+*.o
+*.a
+SOURCE/
+mod/
+obj/
+Makefile
+_provenance_review/
+# confidential commercial data — never commit
+*PROD.txt
+*PED.txt
+*_geno.txt
+phen.txt
+ped.txt
+geno.txt
+# editor/OS cruft
+*~
+.DS_Store
+*.log
