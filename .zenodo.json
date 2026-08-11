@@ -1,0 +1,15 @@
+{
+  "upload_type": "software",
+  "title": "GPBLUP: a matrix-free single-step genomic BLUP engine for multi-breed, multi-herd pig genetic evaluation with genomic genetic groups",
+  "version": "1.0.0",
+  "license": "MIT",
+  "access_right": "open",
+  "creators": [
+    {"name": "Lee, Deukmin", "orcid": "0000-0001-7993-9966", "affiliation": "Department of Animal Sciences, Hankyong National University, Republic of Korea"}
+  ],
+  "description": "GPBLUP is a matrix-free single-step genomic BLUP engine for multi-breed, multi-herd pig genetic evaluation, with APY, an automatic data-driven core size, single-step-consistent reliabilities, and a genomic genetic-group / total-merit correction. This is the compiled release (Linux x86-64 binaries, documentation, and a synthetic demonstration dataset) distributed under the MIT License; the Fortran source is maintained privately.",
+  "keywords": ["genomic selection", "single-step GBLUP", "APY", "genetic groups", "pig", "matrix-free", "genomic evaluation"],
+  "related_identifiers": [
+    {"relation": "references", "identifier": "10.5281/zenodo.21765619", "scheme": "doi"}
+  ]
+}
