@@ -117,6 +117,6 @@ Depending on the `[OUTPUT]` keywords, GPBLUP writes:
 ## 6. Pipeline context
 
 GPBLUP consumes the curated genotypes and pedigree produced by the companion
-[genomQC](https://github.com/anibreed/GPBLUP) (quality control and identity recovery) and
+[genomQC](https://github.com/anibreed/genomQC) (quality control and identity recovery) and
 [impQC](https://github.com/anibreed/impQC) (imputation and reference-panel construction)
 stages. Any equivalent inputs in the formats above can be substituted.

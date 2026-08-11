@@ -9,7 +9,7 @@ authors:
 version: "1.0.0"
 license: MIT
 doi: "10.5281/zenodo.XXXXXXX"
-url: "https://github.com/anibreed/GPBLUP"
+url: "https://github.com/anibreed/gpblup"
 date-released: "2026-01-01"
 preferred-citation:
   type: article
